@@ -35,7 +35,7 @@ type options struct {
 	teamName                string
 }
 
-// New returns a new root command.
+// New returns a new sync local command.
 func New() *cobra.Command {
 	o := &options{}
 
@@ -48,8 +48,8 @@ func New() *cobra.Command {
 
 	cmd.Flags().StringVarP(&o.ownersFilepath, flagOwnersFilePath, "o", defaultOwnersFilepath, "The path to the OWNERS file")
 	cmd.Flags().StringVarP(&o.peribolosConfigFilepath, flagPeribolosConfigFilepath, "c", defaultPeribolosConfigFilepath, "The path to the Peribolos org.yaml file")
-	cmd.Flags().StringVar(&o.orgName, "org", "", "The name of the Github organization to update")
-	cmd.Flags().StringVar(&o.teamName, "team", "", "The name of the Github organization to update")
+	cmd.Flags().StringVar(&o.orgName, "org", "", "The name of the GitHub organization to update")
+	cmd.Flags().StringVar(&o.teamName, "team", "", "The name of the GitHub organization to update")
 
 	return cmd
 }

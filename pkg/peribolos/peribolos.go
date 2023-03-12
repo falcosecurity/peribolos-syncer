@@ -18,14 +18,32 @@ package peribolos
 
 import (
 	"fmt"
+	"github.com/spf13/pflag"
 
 	"bitbucket.org/creachadair/stringset"
 	peribolos "k8s.io/test-infra/prow/config/org"
 )
 
+type PeribolosOptions struct {
+	ConfigRepo string
+	ConfigPath string
+}
+
 // New returns a new peribolos.FullConfig structure.
 func New() *peribolos.FullConfig {
 	return &peribolos.FullConfig{}
+}
+
+func (o *PeribolosOptions) Validate() error {
+	if o.ConfigRepo == "" {
+		return fmt.Errorf("organization config file's github repository name is empty")
+	}
+	return nil
+}
+
+func (o *PeribolosOptions) AddPFlags(pfs *pflag.FlagSet) {
+	pfs.StringVar(&o.ConfigRepo, "org-config-repository", "", "The name of the github repository that contains the Peribolos organization config file")
+	pfs.StringVarP(&o.ConfigPath, "org-config", "c", "/org.yaml", "The path to the Peribolos organization config file from the root of the Git repository")
 }
 
 // UpdateTeamMaintainers updates the maintainers of the specified Team in the specified Organization, adding the maintainers

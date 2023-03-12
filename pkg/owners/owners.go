@@ -16,10 +16,26 @@ limitations under the License.
 
 package owners
 
-// Handle represents a Github user handle.
+import (
+	"fmt"
+
+	"github.com/spf13/pflag"
+	"k8s.io/test-infra/prow/config"
+	gitv2 "k8s.io/test-infra/prow/git/v2"
+	"k8s.io/test-infra/prow/github"
+	"k8s.io/test-infra/prow/plugins/ownersconfig"
+	"k8s.io/test-infra/prow/repoowners"
+)
+
+const (
+	ownersRef      = "master"
+	ownersPathRoot = ""
+)
+
+// Handle represents a GitHub user handle.
 type Handle string
 
-// Owners represents a Github OWNERS flie.
+// Owners represents a GitHub OWNERS flie.
 type Owners struct {
 
 	// Approvers is a list of users with ability to approve pull requests.
@@ -32,7 +48,46 @@ type Owners struct {
 	Reviewers []string `json:"reviewers"`
 }
 
-// New returns a new ONWERS content structure.
-func New() *Owners {
-	return &Owners{}
+type OwnersOptions struct {
+	OwnersRepo string
+	OwnersRef  string
+	OwnersPath string
+}
+
+func (o *OwnersOptions) Validate() error {
+	if o.OwnersRepo == "" {
+		return fmt.Errorf("OWNERS file's github repository name is empty")
+	}
+	return nil
+}
+
+func (o *OwnersOptions) AddPFlags(pfs *pflag.FlagSet) {
+	pfs.StringVar(&o.OwnersRepo, "owners-repository", "", "The name of the github repository from which parse OWNERS file")
+	pfs.StringVarP(&o.OwnersRef, "owners-reference", "r", ownersRef, "The Git reference for which parse the OWNERS hierarchy")
+	pfs.StringVarP(&o.OwnersPath, "owners-file", "o", ownersPathRoot, "The path to the OWNERS file from the root of the Git repository")
+}
+
+func (o *OwnersOptions) BuildClient(githubClient github.Client, gitClientFactory gitv2.ClientFactory) (*repoowners.Client, error) {
+	mdYAMLEnabled := func(org, repo string) bool {
+		return false
+	}
+
+	skipCollaborators := func(org, repo string) bool {
+		return true
+	}
+
+	ownersDirDenylist := func() *config.OwnersDirDenylist {
+		return &config.OwnersDirDenylist{}
+	}
+
+	resolver := func(org, repo string) ownersconfig.Filenames {
+		return ownersconfig.Filenames{
+			Owners:        ownersconfig.DefaultOwnersFile,
+			OwnersAliases: ownersconfig.DefaultOwnersAliasesFile,
+		}
+	}
+
+	ownersClient := repoowners.NewClient(gitClientFactory, githubClient, mdYAMLEnabled, skipCollaborators, ownersDirDenylist, resolver)
+
+	return ownersClient, nil
 }
