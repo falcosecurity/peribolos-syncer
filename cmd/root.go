@@ -28,7 +28,7 @@ var cfgFile string
 // New returns a new root command.
 func New() *cobra.Command {
 	cmd := &cobra.Command{}
-	cmd.Use = "peribolos-owners-syncer"
+	cmd.Use = "orgs-owners-syncer"
 	cmd.Short = "A brief description of your application"
 
 	// Add sync subcommand.

@@ -17,11 +17,14 @@ import (
 type GitHubOptions struct {
 	prow.GitHubOptions
 
+	Username string
+
 	DryRun bool
 }
 
 func (o *GitHubOptions) AddPFlags(pfs *pflag.FlagSet) {
 	pfs.BoolVar(&o.DryRun, "dry-run", true, "Dry run for testing. Uses API tokens but does not mutate.")
+	pfs.StringVar(&o.Username, "github-username", "", "The GitHub username")
 
 	fs := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	for _, group := range []flagutil.OptionGroup{
@@ -30,6 +33,14 @@ func (o *GitHubOptions) AddPFlags(pfs *pflag.FlagSet) {
 		group.AddFlags(fs)
 	}
 	pfs.AddGoFlagSet(fs)
+}
+
+func (o *GitHubOptions) ValidateAll() error {
+	if o.Username == "" {
+		return fmt.Errorf("github Username is empty")
+	}
+
+	return nil
 }
 
 func (o *GitHubOptions) BuildClient() (github.Client, error) {

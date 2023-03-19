@@ -25,7 +25,7 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/yaml"
 
-	"github.com/maxgio92/peribolos-owners-syncer/pkg/peribolos"
+	"github.com/maxgio92/peribolos-owners-syncer/pkg/orgs"
 )
 
 type options struct {
@@ -86,17 +86,17 @@ func (o *options) Run(cmd *cobra.Command, agrs []string) error {
 		return errors.Wrap(err, "error reading Peribolos config file")
 	}
 
-	orgs := peribolos.New()
+	orgsConfig := orgs.NewConfig()
 
-	if err = yaml.Unmarshal(b, orgs); err != nil {
+	if err = yaml.Unmarshal(b, orgsConfig); err != nil {
 		return errors.Wrap(err, "error unmarshaling Peribolos config")
 	}
 
-	if err = peribolos.UpdateTeamMembers(orgs, o.orgName, o.teamName, owners.Approvers); err != nil {
+	if err = orgs.UpdateTeamMembers(orgsConfig, o.orgName, o.teamName, owners.Approvers); err != nil {
 		return errors.Wrap(err, "error updating Peribolos' maintainers from OWNERS's approvers")
 	}
 
-	compiled, err := yaml.Marshal(orgs)
+	compiled, err := yaml.Marshal(orgsConfig)
 	if err != nil {
 		return errors.Wrap(err, "error recompiling the Peribolos config")
 	}

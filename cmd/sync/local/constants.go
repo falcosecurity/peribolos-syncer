@@ -18,7 +18,7 @@ package local
 
 const (
 	flagOwnersFilePath             = "owners-file"
-	flagPeribolosConfigFilepath    = "peribolos-config"
+	flagPeribolosConfigFilepath    = "orgs-config"
 	defaultOwnersFilepath          = "OWNERS"
 	defaultPeribolosConfigFilepath = "org.yaml"
 	FilePerm                       = 0644
