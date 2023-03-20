@@ -49,9 +49,9 @@ type Owners struct {
 }
 
 type OwnersOptions struct {
-	OwnersRepo string
-	OwnersRef  string
-	OwnersPath string
+	OwnersRepo    string
+	OwnersBaseRef string
+	OwnersPath    string
 }
 
 func (o *OwnersOptions) Validate() error {
@@ -63,7 +63,7 @@ func (o *OwnersOptions) Validate() error {
 
 func (o *OwnersOptions) AddPFlags(pfs *pflag.FlagSet) {
 	pfs.StringVar(&o.OwnersRepo, "owners-repository", "", "The name of the github repository from which parse OWNERS file")
-	pfs.StringVarP(&o.OwnersRef, "owners-reference", "r", ownersRef, "The Git reference for which parse the OWNERS hierarchy")
+	pfs.StringVarP(&o.OwnersBaseRef, "owners-reference", "r", ownersRef, "The base Git reference at which parse the OWNERS hierarchy")
 	pfs.StringVarP(&o.OwnersPath, "owners-file", "o", ownersPathRoot, "The path to the OWNERS file from the root of the Git repository")
 }
 

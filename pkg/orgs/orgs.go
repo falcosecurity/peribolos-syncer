@@ -25,9 +25,9 @@ import (
 )
 
 type PeribolosOptions struct {
-	ConfigRepo       string
-	ConfigPath       string
-	ConfigBaseBranch string
+	ConfigRepo    string
+	ConfigPath    string
+	ConfigBaseRef string
 }
 
 // NewConfig returns a new orgs.FullConfig structure.
@@ -43,9 +43,9 @@ func (o *PeribolosOptions) Validate() error {
 }
 
 func (o *PeribolosOptions) AddPFlags(pfs *pflag.FlagSet) {
-	pfs.StringVar(&o.ConfigRepo, "org-config-repository", "", "The name of the github repository that contains the Peribolos organization config file")
-	pfs.StringVarP(&o.ConfigPath, "org-config", "c", "/org.yaml", "The path to the Peribolos organization config file from the root of the Git repository")
-	pfs.StringVar(&o.ConfigBaseBranch, "org-config-base-branch", "master", "The Git base branch of the Peribolos config repository")
+	pfs.StringVar(&o.ConfigRepo, "orgs-config-repository", "", "The name of the github repository that contains the Peribolos organization config file")
+	pfs.StringVarP(&o.ConfigPath, "orgs-config", "c", "/org.yaml", "The path to the Peribolos organization config file from the root of the Git repository")
+	pfs.StringVar(&o.ConfigBaseRef, "orgs-config-base-ref", "master", "The base Git reference at which pull the Peribolos config repository")
 }
 
 // UpdateTeamMaintainers updates the maintainers of the specified Team in the specified Organization, adding the maintainers

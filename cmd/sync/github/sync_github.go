@@ -207,7 +207,7 @@ func (o *options) loadOwners(githubClient github.Client) (repoowners.RepoOwner, 
 		return nil, errors.Wrap(err, "error building owners client")
 	}
 
-	owners, err := ownersClient.LoadRepoOwners(o.githubOrg, o.owners.OwnersRepo, o.owners.OwnersRef)
+	owners, err := ownersClient.LoadRepoOwners(o.githubOrg, o.owners.OwnersRepo, o.owners.OwnersBaseRef)
 	if err != nil {
 		return nil, errors.Wrap(err, "error loading owners")
 	}
@@ -351,7 +351,7 @@ func (o *options) createPullRequest(gh github.Client, ref string) (*int, error) 
 %s
 `, o.githubTeam, o.owners.OwnersRepo, syncerSignature),
 		ref,
-		o.peribolos.ConfigBaseBranch,
+		o.peribolos.ConfigBaseRef,
 		false,
 	)
 	if err != nil {
