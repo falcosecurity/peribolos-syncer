@@ -152,10 +152,8 @@ func (o *options) Run(cmd *cobra.Command, args []string) error {
 	// Get the leaf approvers from the Owners hierarchy.
 	approvers := maps.Keys(owners.LeafApprovers(o.owners.OwnersPath))
 
-	// TODO: fork the Peribolos config repository.
-
 	// Clone orgs config repository.
-	repo, worktree, tmp, err := o.cloneOrgsConfigRepo(string(token))
+	repo, worktree, tmp, err := o.forkOrgsConfigRepo(gh, string(token))
 	if err != nil {
 		return err
 	}
@@ -206,6 +204,7 @@ func (o *options) Run(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// loadOwners loads the OWNERS hierarchy from the remote GitHub repository.
 func (o *options) loadOwners(githubClient github.Client) (repoowners.RepoOwner, error) {
 	gitClientFactory, err := o.github.GetGitClientFactory()
 	if err != nil {
@@ -225,6 +224,7 @@ func (o *options) loadOwners(githubClient github.Client) (repoowners.RepoOwner, 
 	return owners, nil
 }
 
+// loadOrgsConfig loads the orgs Peribolos config from the repository worktree.
 func (o *options) loadOrgsConfig(worktree *git.Worktree) (*peribolos.FullConfig, error) {
 	r, err := worktree.Filesystem.Open(o.orgs.ConfigPath)
 	if err != nil {
@@ -245,15 +245,20 @@ func (o *options) loadOrgsConfig(worktree *git.Worktree) (*peribolos.FullConfig,
 	return config, nil
 }
 
-func (o *options) cloneOrgsConfigRepo(githubToken string) (*git.Repository, *git.Worktree, string, error) {
+func (o *options) forkOrgsConfigRepo(githubClient github.Client, githubToken string) (*git.Repository, *git.Worktree, string, error) {
 	tmp, err := os.MkdirTemp("", "orgs")
 	if err != nil {
 		return nil, nil, "", errors.Wrap(err, "error creating temporary direcotry for cloning git repo")
 	}
 
-	orgsRepoURL, err := url.JoinPath(fmt.Sprintf("https://%s", o.github.Host), o.GitHubOrg, o.orgs.ConfigRepo)
+	fork, err := githubClient.EnsureFork(o.github.Username, o.GitHubOrg, o.orgs.ConfigRepo)
 	if err != nil {
-		return nil, nil, "", errors.Wrap(err, "error generating Peribolos config repository URL")
+		return nil, nil, "", errors.Wrap(err, "error creating a fork of the orgs config repo")
+	}
+
+	orgsRepoURL, err := url.JoinPath(fmt.Sprintf("https://%s", o.github.Host), o.github.Username, fork)
+	if err != nil {
+		return nil, nil, "", errors.Wrap(err, "error generating orgs config repository URL")
 	}
 
 	repo, err := git.PlainClone(tmp, false, &git.CloneOptions{
@@ -360,7 +365,7 @@ func (o *options) createPullRequest(gh github.Client, ref string) (*int, error) 
 
 %s
 `, o.GitHubTeam, o.owners.OwnersRepo, ownersDoc, syncerSignature),
-		ref,
+		fmt.Sprintf("%s:%s", o.github.Username, ref),
 		o.orgs.ConfigBaseRef,
 		false,
 	)
