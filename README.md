@@ -54,8 +54,8 @@ Flags:
   -c, --orgs-config string                       The path to the Peribolos organization config file from the root of the Git repository (default "/org.yaml")
       --orgs-config-base-ref string              The base Git reference at which pull the Peribolos config repository (default "master")
       --orgs-config-repository string            The name of the github repository that contains the Peribolos organization config file
-  -o, --owners-file string                       The path to the OWNERS file from the root of the Git repository
-  -r, --owners-reference string                  The base Git reference at which parse the OWNERS hierarchy (default "master")
+  -o, --owners-file string                       The path to the OWNERS file from the root of the Git repository. Ignored with sync-github.
+  -r, --owners-base-ref string                  The base Git reference at which parse the OWNERS hierarchy (default "master")
       --owners-repository string                 The name of the github repository from which parse OWNERS file
       --team string                              The name of the GitHub team to update configuration for
 ```
