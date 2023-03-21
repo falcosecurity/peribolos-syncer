@@ -145,6 +145,9 @@ func (o *options) Run(cmd *cobra.Command, args []string) error {
 
 	// Load Owners hierarchy from specified repository.
 	owners, err := o.loadOwners(gh)
+	if err != nil {
+		return errors.Wrap(err, "error loading owners from repository")
+	}
 
 	// Get the leaf approvers from the Owners hierarchy.
 	approvers := maps.Keys(owners.LeafApprovers(o.owners.OwnersPath))
