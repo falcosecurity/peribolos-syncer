@@ -18,40 +18,38 @@ package github
 
 import (
 	"fmt"
-	"golang.org/x/exp/maps"
 	"io"
-	peribolos "k8s.io/test-infra/prow/config/org"
 	"net/url"
 	"os"
 	"path"
 	"time"
 
-	gogit "github.com/go-git/go-git/v5"
-	gogitplumbing "github.com/go-git/go-git/v5/plumbing"
-	gogitobject "github.com/go-git/go-git/v5/plumbing/object"
-	gogithttp "github.com/go-git/go-git/v5/plumbing/transport/http"
+	"github.com/go-git/go-git/v5"
+	gitplumbing "github.com/go-git/go-git/v5/plumbing"
+	gitobject "github.com/go-git/go-git/v5/plumbing/object"
+	githttp "github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/google/uuid"
-	syncergithub "github.com/maxgio92/peribolos-owners-syncer/internal/github"
-	"github.com/maxgio92/peribolos-owners-syncer/pkg/orgs"
-	"github.com/maxgio92/peribolos-owners-syncer/pkg/owners"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"golang.org/x/exp/maps"
+	peribolos "k8s.io/test-infra/prow/config/org"
 	"k8s.io/test-infra/prow/github"
 	"k8s.io/test-infra/prow/repoowners"
 	"sigs.k8s.io/yaml"
+
+	syncergithub "github.com/maxgio92/peribolos-owners-syncer/pkg/github"
+	"github.com/maxgio92/peribolos-owners-syncer/pkg/orgs"
+	"github.com/maxgio92/peribolos-owners-syncer/pkg/owners"
+	"github.com/maxgio92/peribolos-owners-syncer/pkg/sync"
 )
 
 type options struct {
-	githubTeam string
-	githubOrg  string
+	*sync.Options
 
-	gitAuthorEmail string
-	gitAuthorName  string
-
+	author gitobject.Signature
 	github syncergithub.GitHubOptions
-
-	peribolos *orgs.PeribolosOptions
-	owners    *owners.OwnersOptions
+	orgs   *orgs.PeribolosOptions
+	owners *owners.OwnersOptions
 }
 
 const (
@@ -62,8 +60,11 @@ const (
 // TODO: generate doc.
 func New() *cobra.Command {
 	o := &options{
-		owners:    &owners.OwnersOptions{},
-		peribolos: &orgs.PeribolosOptions{},
+		Options: &sync.Options{},
+		author:  gitobject.Signature{},
+		github:  syncergithub.GitHubOptions{},
+		owners:  &owners.OwnersOptions{},
+		orgs:    &orgs.PeribolosOptions{},
 	}
 
 	cmd := &cobra.Command{
@@ -72,35 +73,40 @@ func New() *cobra.Command {
 		RunE:  o.Run,
 	}
 
-	// Github organization options.
-	cmd.Flags().StringVar(&o.githubOrg, "org", "", "The name of the GitHub organization to update configuration for")
-	cmd.Flags().StringVar(&o.githubTeam, "team", "", "The name of the GitHub team to update configuration for")
+	// Organization sync options.
+	cmd.Flags().StringVar(&o.GitHubOrg, "org", "", "The name of the GitHub organization to update configuration for")
+	cmd.Flags().StringVar(&o.GitHubTeam, "team", "", "The name of the GitHub team to update configuration for")
 
-	// Git options (how to write on Peribolos repository).
-	cmd.Flags().StringVar(&o.gitAuthorName, "author-name", "", "The Git author name with which write commits for the update of the Peribolos config")
-	cmd.Flags().StringVar(&o.gitAuthorEmail, "author-email", "", "The Git author email with which write commits for the update of the Peribolos config")
+	// Git options.
+	cmd.Flags().StringVar(&o.author.Name, "git-author-name", "", "The Git author name with which write commits for the update of the Peribolos config")
+	cmd.Flags().StringVar(&o.author.Email, "git-author-email", "", "The Git author email with which write commits for the update of the Peribolos config")
 
+	// GitHub options.
 	o.github.AddPFlags(cmd.Flags())
+
+	// Owners options.
 	o.owners.AddPFlags(cmd.Flags())
-	o.peribolos.AddPFlags(cmd.Flags())
+
+	// Orgs config options.
+	o.orgs.AddPFlags(cmd.Flags())
 
 	return cmd
 }
 
 func (o *options) validate() error {
-	if o.githubOrg == "" {
+	if o.GitHubOrg == "" {
 		return fmt.Errorf("github organization name is empty")
 	}
 
-	if o.githubTeam == "" {
+	if o.GitHubTeam == "" {
 		return fmt.Errorf("github team name is empty")
 	}
 
-	if o.gitAuthorName == "" {
+	if o.author.Name == "" {
 		return fmt.Errorf("git author name is empty")
 	}
 
-	if o.gitAuthorEmail == "" {
+	if o.author.Email == "" {
 		return fmt.Errorf("git author email is empty")
 	}
 
@@ -108,7 +114,7 @@ func (o *options) validate() error {
 		return err
 	}
 
-	if err := o.peribolos.Validate(); err != nil {
+	if err := o.orgs.Validate(); err != nil {
 		return err
 	}
 
@@ -175,8 +181,8 @@ func (o *options) Run(cmd *cobra.Command, args []string) error {
 	if !o.github.DryRun {
 
 		// Push the new branch to the remote with the user access token.
-		if err := repo.Push(&gogit.PushOptions{
-			Auth: &gogithttp.BasicAuth{
+		if err := repo.Push(&git.PushOptions{
+			Auth: &githttp.BasicAuth{
 				Username: o.github.Username,
 				Password: string(token),
 			},
@@ -190,7 +196,7 @@ func (o *options) Run(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		fmt.Printf("A Pull Request has been opened: https://github.com/%s/%s/pull/%d", o.githubOrg, o.peribolos.ConfigRepo, *pr)
+		fmt.Printf("A Pull Request has been opened: https://github.com/%s/%s/pull/%d", o.GitHubOrg, o.orgs.ConfigRepo, *pr)
 	}
 
 	return nil
@@ -207,7 +213,7 @@ func (o *options) loadOwners(githubClient github.Client) (repoowners.RepoOwner, 
 		return nil, errors.Wrap(err, "error building owners client")
 	}
 
-	owners, err := ownersClient.LoadRepoOwners(o.githubOrg, o.owners.OwnersRepo, o.owners.OwnersBaseRef)
+	owners, err := ownersClient.LoadRepoOwners(o.GitHubOrg, o.owners.OwnersRepo, o.owners.OwnersBaseRef)
 	if err != nil {
 		return nil, errors.Wrap(err, "error loading owners")
 	}
@@ -215,8 +221,8 @@ func (o *options) loadOwners(githubClient github.Client) (repoowners.RepoOwner, 
 	return owners, nil
 }
 
-func (o *options) loadOrgsConfig(worktree *gogit.Worktree) (*peribolos.FullConfig, error) {
-	r, err := worktree.Filesystem.Open(o.peribolos.ConfigPath)
+func (o *options) loadOrgsConfig(worktree *git.Worktree) (*peribolos.FullConfig, error) {
+	r, err := worktree.Filesystem.Open(o.orgs.ConfigPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "error opening orgs config file")
 	}
@@ -235,23 +241,23 @@ func (o *options) loadOrgsConfig(worktree *gogit.Worktree) (*peribolos.FullConfi
 	return config, nil
 }
 
-func (o *options) cloneOrgsConfigRepo(githubToken string) (*gogit.Repository, *gogit.Worktree, string, error) {
+func (o *options) cloneOrgsConfigRepo(githubToken string) (*git.Repository, *git.Worktree, string, error) {
 	tmp, err := os.MkdirTemp("", "orgs")
 	if err != nil {
 		return nil, nil, "", errors.Wrap(err, "error creating temporary direcotry for cloning git repo")
 	}
 
-	peribolosRepoURL, err := url.JoinPath("https://github.com", o.githubOrg, o.peribolos.ConfigRepo)
+	orgsRepoURL, err := url.JoinPath("https://github.com", o.GitHubOrg, o.orgs.ConfigRepo)
 	if err != nil {
 		return nil, nil, "", errors.Wrap(err, "error generating Peribolos config repository URL")
 	}
 
-	repo, err := gogit.PlainClone(tmp, false, &gogit.CloneOptions{
-		Auth: &gogithttp.BasicAuth{
+	repo, err := git.PlainClone(tmp, false, &git.CloneOptions{
+		Auth: &githttp.BasicAuth{
 			Username: o.github.Username, // yes, this can be anything except an empty string
 			Password: githubToken,
 		},
-		URL:      peribolosRepoURL,
+		URL:      orgsRepoURL,
 		Progress: nil,
 	})
 	if err != nil {
@@ -266,7 +272,7 @@ func (o *options) cloneOrgsConfigRepo(githubToken string) (*gogit.Repository, *g
 	return repo, worktree, tmp, nil
 }
 
-func (o *options) newEphemeralGitBranch(repo *gogit.Repository, worktree *gogit.Worktree) (string, error) {
+func (o *options) newEphemeralGitBranch(repo *git.Repository, worktree *git.Worktree) (string, error) {
 	id := uuid.New()
 	refName := id.String()
 	headRef, err := repo.Head()
@@ -274,14 +280,14 @@ func (o *options) newEphemeralGitBranch(repo *gogit.Repository, worktree *gogit.
 		return "", errors.Wrap(err, "error getting repository HEAD reference")
 	}
 
-	ref := gogitplumbing.NewHashReference(
-		gogitplumbing.NewBranchReferenceName(refName),
+	ref := gitplumbing.NewHashReference(
+		gitplumbing.NewBranchReferenceName(refName),
 		headRef.Hash(),
 	)
 	err = repo.Storer.SetReference(ref)
 
-	if err = worktree.Checkout(&gogit.CheckoutOptions{
-		Branch: gogitplumbing.NewBranchReferenceName(refName),
+	if err = worktree.Checkout(&git.CheckoutOptions{
+		Branch: gitplumbing.NewBranchReferenceName(refName),
 	}); err != nil {
 		return "", errors.Wrap(err, "error checking out just created branch")
 	}
@@ -290,7 +296,7 @@ func (o *options) newEphemeralGitBranch(repo *gogit.Repository, worktree *gogit.
 }
 
 func (o *options) updateTeams(orgsConfig *peribolos.FullConfig, approvers []string, wPath string) error {
-	if err := orgs.UpdateTeamMembers(orgsConfig, o.githubOrg, o.githubTeam, approvers); err != nil {
+	if err := orgs.UpdateTeamMembers(orgsConfig, o.GitHubOrg, o.GitHubTeam, approvers); err != nil {
 		return errors.Wrap(err, "error updating Peribolos' maintainers from OWNERS's approvers")
 	}
 
@@ -300,16 +306,16 @@ func (o *options) updateTeams(orgsConfig *peribolos.FullConfig, approvers []stri
 		return errors.Wrap(err, "error recompiling the Peribolos config")
 	}
 
-	if err = os.WriteFile(path.Join(wPath, o.peribolos.ConfigPath), b, 0644); err != nil {
+	if err = os.WriteFile(path.Join(wPath, o.orgs.ConfigPath), b, 0644); err != nil {
 		return errors.Wrap(err, "error writing the recompiled Peribolos config")
 	}
 
 	return nil
 }
 
-func (o *options) commitAll(repo *gogit.Repository, worktree *gogit.Worktree) error {
+func (o *options) commitAll(repo *git.Repository, worktree *git.Worktree) error {
 	// Stage the updated Peribolos config file to the index.
-	if _, err := worktree.Add(o.peribolos.ConfigPath); err != nil {
+	if _, err := worktree.Add(o.orgs.ConfigPath); err != nil {
 		return errors.Wrap(err, "error staging Peribolos config file")
 	}
 
@@ -320,11 +326,11 @@ The update reflects the content of the related repository root's OWNERS.
 %s
 
 Signed-off-by: %s <%s>
-`, o.githubTeam, syncerSignature, o.gitAuthorName, o.gitAuthorEmail)
-	commit, err := worktree.Commit(commitMsg, &gogit.CommitOptions{
-		Author: &gogitobject.Signature{
-			Name:  o.gitAuthorName,
-			Email: o.gitAuthorEmail,
+`, o.GitHubTeam, syncerSignature, o.author.Name, o.author.Email)
+	commit, err := worktree.Commit(commitMsg, &git.CommitOptions{
+		Author: &gitobject.Signature{
+			Name:  o.author.Name,
+			Email: o.author.Email,
 			When:  time.Now(),
 		},
 	})
@@ -343,15 +349,15 @@ Signed-off-by: %s <%s>
 
 func (o *options) createPullRequest(gh github.Client, ref string) (*int, error) {
 	n, err := gh.CreatePullRequest(
-		o.githubOrg,
-		o.peribolos.ConfigRepo,
-		fmt.Sprintf("Sync Github Team %s with %s owners", o.githubTeam, o.owners.OwnersRepo),
+		o.GitHubOrg,
+		o.orgs.ConfigRepo,
+		fmt.Sprintf("Sync Github Team %s with %s owners", o.GitHubTeam, o.owners.OwnersRepo),
 		fmt.Sprintf(`This PR synchronizes the Github Team %s with the root approvers in %s repository's OWNERS'.
 
 %s
-`, o.githubTeam, o.owners.OwnersRepo, syncerSignature),
+`, o.GitHubTeam, o.owners.OwnersRepo, syncerSignature),
 		ref,
-		o.peribolos.ConfigBaseRef,
+		o.orgs.ConfigBaseRef,
 		false,
 	)
 	if err != nil {

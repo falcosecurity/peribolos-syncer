@@ -18,6 +18,7 @@ package local
 
 import (
 	"fmt"
+	"github.com/maxgio92/peribolos-owners-syncer/pkg/sync"
 	"k8s.io/test-infra/prow/repoowners"
 	"os"
 
@@ -31,13 +32,15 @@ import (
 type options struct {
 	peribolosConfigFilepath string
 	ownersFilepath          string
-	orgName                 string
-	teamName                string
+
+	*sync.Options
 }
 
 // New returns a new sync local command.
 func New() *cobra.Command {
-	o := &options{}
+	o := &options{
+		Options: &sync.Options{},
+	}
 
 	cmd := &cobra.Command{
 		Use:   "local",
@@ -48,18 +51,18 @@ func New() *cobra.Command {
 
 	cmd.Flags().StringVarP(&o.ownersFilepath, flagOwnersFilePath, "o", defaultOwnersFilepath, "The path to the OWNERS file")
 	cmd.Flags().StringVarP(&o.peribolosConfigFilepath, flagPeribolosConfigFilepath, "c", defaultPeribolosConfigFilepath, "The path to the Peribolos org.yaml file")
-	cmd.Flags().StringVar(&o.orgName, "org", "", "The name of the GitHub organization to update")
-	cmd.Flags().StringVar(&o.teamName, "team", "", "The name of the GitHub organization to update")
+	cmd.Flags().StringVar(&o.GitHubOrg, "org", "", "The name of the GitHub organization to update")
+	cmd.Flags().StringVar(&o.GitHubTeam, "team", "", "The name of the GitHub organization to update")
 
 	return cmd
 }
 
 func (o *options) validate() error {
-	if o.orgName == "" {
+	if o.GitHubOrg == "" {
 		return fmt.Errorf("org name is empty")
 	}
 
-	if o.teamName == "" {
+	if o.GitHubTeam == "" {
 		return fmt.Errorf("team name is empty")
 	}
 
@@ -92,7 +95,7 @@ func (o *options) Run(cmd *cobra.Command, agrs []string) error {
 		return errors.Wrap(err, "error unmarshaling Peribolos config")
 	}
 
-	if err = orgs.UpdateTeamMembers(orgsConfig, o.orgName, o.teamName, owners.Approvers); err != nil {
+	if err = orgs.UpdateTeamMembers(orgsConfig, o.GitHubOrg, o.GitHubTeam, owners.Approvers); err != nil {
 		return errors.Wrap(err, "error updating Peribolos' maintainers from OWNERS's approvers")
 	}
 
