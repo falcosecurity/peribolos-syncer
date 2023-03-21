@@ -153,13 +153,13 @@ func (o *options) Run(cmd *cobra.Command, args []string) error {
 	approvers := maps.Keys(owners.LeafApprovers(o.owners.OwnersPath))
 
 	// Clone orgs config repository.
-	repo, worktree, tmp, err := o.forkOrgsConfigRepo(gh, string(token))
+	repo, worktree, tmp, err := o.forkConfigRepo(gh, string(token))
 	if err != nil {
 		return err
 	}
 
-	// Build Peribolos config.
-	orgsConfig, err := o.loadOrgsConfig(worktree)
+	// Load GitHub orgs config.
+	config, err := o.loadConfig(worktree)
 	if err != nil {
 		return err
 	}
@@ -171,7 +171,7 @@ func (o *options) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	// Synchronize the Github Team config with Approvers.
-	if err = o.updateTeams(orgsConfig, approvers, tmp); err != nil {
+	if err = o.updateTeams(config, approvers, tmp); err != nil {
 		return err
 	}
 
@@ -205,13 +205,13 @@ func (o *options) Run(cmd *cobra.Command, args []string) error {
 }
 
 // loadOwners loads the OWNERS hierarchy from the remote GitHub repository.
-func (o *options) loadOwners(githubClient github.Client) (repoowners.RepoOwner, error) {
-	gitClientFactory, err := o.github.GetGitClientFactory()
+func (o *options) loadOwners(ghc github.Client) (repoowners.RepoOwner, error) {
+	factory, err := o.github.GetGitClientFactory()
 	if err != nil {
 		return nil, errors.Wrap(err, "error building git client factory")
 	}
 
-	ownersClient, err := o.owners.BuildClient(githubClient, gitClientFactory)
+	ownersClient, err := o.owners.BuildClient(ghc, factory)
 	if err != nil {
 		return nil, errors.Wrap(err, "error building owners client")
 	}
@@ -224,8 +224,8 @@ func (o *options) loadOwners(githubClient github.Client) (repoowners.RepoOwner, 
 	return owners, nil
 }
 
-// loadOrgsConfig loads the orgs Peribolos config from the repository worktree.
-func (o *options) loadOrgsConfig(worktree *git.Worktree) (*peribolos.FullConfig, error) {
+// loadConfig loads the orgs Peribolos config from the repository worktree.
+func (o *options) loadConfig(worktree *git.Worktree) (*peribolos.FullConfig, error) {
 	r, err := worktree.Filesystem.Open(o.orgs.ConfigPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "error opening orgs config file")
@@ -233,52 +233,52 @@ func (o *options) loadOrgsConfig(worktree *git.Worktree) (*peribolos.FullConfig,
 
 	b, err := io.ReadAll(r)
 	if err != nil {
-		return nil, errors.Wrap(err, "error reading Peribolos config file")
+		return nil, errors.Wrap(err, "error reading orgs config file")
 	}
 
 	config := orgs.NewConfig()
 
 	if err = yaml.Unmarshal(b, config); err != nil {
-		return nil, errors.Wrap(err, "error unmarshaling Peribolos config")
+		return nil, errors.Wrap(err, "error unmarshaling orgs config")
 	}
 
 	return config, nil
 }
 
-func (o *options) forkOrgsConfigRepo(githubClient github.Client, githubToken string) (*git.Repository, *git.Worktree, string, error) {
+func (o *options) forkConfigRepo(ghc github.Client, githubToken string) (*git.Repository, *git.Worktree, string, error) {
 	tmp, err := os.MkdirTemp("", "orgs")
 	if err != nil {
-		return nil, nil, "", errors.Wrap(err, "error creating temporary direcotry for cloning git repo")
+		return nil, nil, "", errors.Wrap(err, "error creating temporary directory for cloning git repo")
 	}
 
-	fork, err := githubClient.EnsureFork(o.github.Username, o.GitHubOrg, o.orgs.ConfigRepo)
+	fork, err := ghc.EnsureFork(o.github.Username, o.GitHubOrg, o.orgs.ConfigRepo)
 	if err != nil {
 		return nil, nil, "", errors.Wrap(err, "error creating a fork of the orgs config repo")
 	}
 
-	orgsRepoURL, err := url.JoinPath(fmt.Sprintf("https://%s", o.github.Host), o.github.Username, fork)
+	configRepoURL, err := url.JoinPath(fmt.Sprintf("https://%s", o.github.Host), o.github.Username, fork)
 	if err != nil {
 		return nil, nil, "", errors.Wrap(err, "error generating orgs config repository URL")
 	}
 
 	repo, err := git.PlainClone(tmp, false, &git.CloneOptions{
 		Auth: &githttp.BasicAuth{
-			Username: o.github.Username, // yes, this can be anything except an empty string
+			Username: o.github.Username,
 			Password: githubToken,
 		},
-		URL:      orgsRepoURL,
+		URL:      configRepoURL,
 		Progress: nil,
 	})
 	if err != nil {
 		return nil, nil, "", errors.Wrap(err, "error cloning git repository")
 	}
 
-	worktree, err := repo.Worktree()
+	wt, err := repo.Worktree()
 	if err != nil {
 		return nil, nil, "", errors.Wrap(err, "error getting repository worktree")
 	}
 
-	return repo, worktree, tmp, nil
+	return repo, wt, tmp, nil
 }
 
 func (o *options) newEphemeralGitBranch(repo *git.Repository, worktree *git.Worktree) (string, error) {
@@ -304,28 +304,28 @@ func (o *options) newEphemeralGitBranch(repo *git.Repository, worktree *git.Work
 	return refName, nil
 }
 
-func (o *options) updateTeams(orgsConfig *peribolos.FullConfig, approvers []string, wPath string) error {
-	if err := orgs.UpdateTeamMembers(orgsConfig, o.GitHubOrg, o.GitHubTeam, approvers); err != nil {
-		return errors.Wrap(err, "error updating Peribolos' maintainers from OWNERS's approvers")
+func (o *options) updateTeams(config *peribolos.FullConfig, approvers []string, wPath string) error {
+	if err := orgs.UpdateTeamMembers(config, o.GitHubOrg, o.GitHubTeam, approvers); err != nil {
+		return errors.Wrap(err, "error updating maintainers github team from leaf approvers")
 	}
 
-	// Write the update Peribolos config file.
-	b, err := yaml.Marshal(orgsConfig)
+	// Write the update orgs config file.
+	b, err := yaml.Marshal(config)
 	if err != nil {
-		return errors.Wrap(err, "error recompiling the Peribolos config")
+		return errors.Wrap(err, "error recompiling the orgs config")
 	}
 
 	if err = os.WriteFile(path.Join(wPath, o.orgs.ConfigPath), b, 0644); err != nil {
-		return errors.Wrap(err, "error writing the recompiled Peribolos config")
+		return errors.Wrap(err, "error writing the recompiled orgs config")
 	}
 
 	return nil
 }
 
 func (o *options) commitAll(repo *git.Repository, worktree *git.Worktree) error {
-	// Stage the updated Peribolos config file to the index.
+	// Stage the updated orgs config file to the index.
 	if _, err := worktree.Add(o.orgs.ConfigPath); err != nil {
-		return errors.Wrap(err, "error staging Peribolos config file")
+		return errors.Wrap(err, "error staging orgs config file")
 	}
 
 	// Store the change in a commitAll with a log.
