@@ -4,7 +4,11 @@ The tool synchronizes [Peribolos](https://docs.prow.k8s.io/docs/components/cli-t
 
 ## Usage
 
-### Synchronize local files
+### Local files
+
+The `sync local` retrieves both `OWNERS` and `orgs.yaml` files from **local filesystem**.
+
+It updates the specified GitHub team according to the leaf approvers, in-place.
 
 ```shell
 syncer sync local [flags]
@@ -17,7 +21,11 @@ Flags:
       --team string          The name of the GitHub organization to update
 ```
 
-### Synchronize remote files with Pull Request
+### Remote files
+
+The `sync github` retrieves both `OWNERS` and `orgs.yaml` files from **GitHub repositories**.
+
+It updates the specified GitHub team according to the leaf approvers in-place, via a **Pull Request** against the `orgs.yaml` repository base reference.
 
 ```shell
 syncer sync github [flags]
@@ -56,16 +64,11 @@ Flags:
 
 ```shell
 syncer sync github \
-  --dry-run=false \
-  --org maxgio92 \
-  --team foo-maintainers \
-  --org-config org.yaml \
-  --owners-repository "foo" \
-  --orgs-config-repository ".github" \
-  --github-token-path=/path/to/token \
-  --git-author-name="Massimiliano Giovagnoli" \
-  --git-author-email="me@maxgio.it" \
-  --github-username=maxgio92
+  --org maxgio92 --team foo-maintainers --owners-repository "foo" \
+  --orgs-config org.yaml --orgs-config-repository ".github" \
+  --github-username=mybot --github-token-path=/path/to/token \
+  --git-author-name="My Bot" --git-author-email="bot@example.org" \
+  --dry-run=false
 ```
 
 ## Goals
