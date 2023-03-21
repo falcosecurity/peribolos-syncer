@@ -28,8 +28,8 @@ import (
 )
 
 const (
-	ownersRef      = "master"
-	ownersPathRoot = ""
+	baseRef  = "master"
+	pathRoot = ""
 )
 
 // Handle represents a GitHub user handle.
@@ -63,8 +63,8 @@ func (o *OwnersOptions) Validate() error {
 
 func (o *OwnersOptions) AddPFlags(pfs *pflag.FlagSet) {
 	pfs.StringVar(&o.OwnersRepo, "owners-repository", "", "The name of the github repository from which parse OWNERS file")
-	pfs.StringVarP(&o.OwnersBaseRef, "owners-reference", "r", ownersRef, "The base Git reference at which parse the OWNERS hierarchy")
-	pfs.StringVarP(&o.OwnersPath, "owners-file", "o", ownersPathRoot, "The path to the OWNERS file from the root of the Git repository")
+	pfs.StringVarP(&o.OwnersBaseRef, "owners-base-ref", "r", baseRef, "The base Git reference at which parse the OWNERS hierarchy")
+	pfs.StringVarP(&o.OwnersPath, "owners-file", "o", pathRoot, "The path to the OWNERS file from the root of the Git repository. Ignored with sync-github.")
 }
 
 func (o *OwnersOptions) BuildClient(githubClient github.Client, gitClientFactory gitv2.ClientFactory) (*repoowners.Client, error) {
