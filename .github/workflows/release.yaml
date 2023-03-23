@@ -1,0 +1,27 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - v*
+
+permissions:
+  contents: write
+
+jobs:
+  release-cross:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v2
+        with:
+          submodules: 'true'
+      - run: git fetch --prune --unshallow
+      - name: Set up Go and dependencies
+        uses: actions/setup-go@v2
+      - name: Setup release environment
+        run: |-
+          echo 'GITHUB_TOKEN=${{secrets.GORELEASER_ACCESS_TOKEN}}' > .release-env
+      - name: Publish release
+        run: make release
+
