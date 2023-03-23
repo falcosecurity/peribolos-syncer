@@ -18,9 +18,9 @@ package orgs
 
 import (
 	"fmt"
-	"github.com/spf13/pflag"
 
 	"bitbucket.org/creachadair/stringset"
+	"github.com/spf13/pflag"
 	peribolos "k8s.io/test-infra/prow/config/org"
 )
 
@@ -41,8 +41,10 @@ func NewConfig() *peribolos.FullConfig {
 
 func (o *PeribolosOptions) Validate() error {
 	if o.ConfigRepo == "" {
+		//nolint:goerr113
 		return fmt.Errorf("organization config file's github repository name is empty")
 	}
+
 	return nil
 }
 
@@ -57,11 +59,13 @@ func (o *PeribolosOptions) AddPFlags(pfs *pflag.FlagSet) {
 func UpdateTeamMaintainers(config *peribolos.FullConfig, org, team string, maintainers []string) error {
 	orgConfig, ok := config.Orgs[org]
 	if !ok {
+		//nolint:goerr113
 		return fmt.Errorf("organization not found in Peribolos config")
 	}
 
 	teamConfig, ok := orgConfig.Teams[team]
 	if !ok {
+		//nolint:goerr113
 		return fmt.Errorf("team not fonud in organization %s Peribolos config", org)
 	}
 
@@ -84,11 +88,13 @@ func UpdateTeamMaintainers(config *peribolos.FullConfig, org, team string, maint
 func UpdateTeamMembers(config *peribolos.FullConfig, org, team string, members []string) error {
 	orgConfig, ok := config.Orgs[org]
 	if !ok {
+		//nolint:goerr113
 		return fmt.Errorf("organization not found in Peribolos config")
 	}
 
 	teamConfig, ok := orgConfig.Teams[team]
 	if !ok {
+		//nolint:goerr113
 		return fmt.Errorf("team not fonud in organization %s Peribolos config", org)
 	}
 

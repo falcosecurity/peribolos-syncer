@@ -37,6 +37,7 @@ import (
 	"k8s.io/test-infra/prow/repoowners"
 	"sigs.k8s.io/yaml"
 
+	"github.com/maxgio92/peribolos-owners-syncer/internal/output"
 	syncergithub "github.com/maxgio92/peribolos-owners-syncer/pkg/github"
 	"github.com/maxgio92/peribolos-owners-syncer/pkg/orgs"
 	"github.com/maxgio92/peribolos-owners-syncer/pkg/owners"
@@ -198,7 +199,7 @@ func (o *options) Run(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		fmt.Printf("A Pull Request has been opened: https://%s/%s/%s/pull/%d", o.github.Host, o.GitHubOrg, o.orgs.ConfigRepo, *pr)
+		output.Print(fmt.Sprintf("A Pull Request has been opened: https://%s/%s/%s/pull/%d", o.github.Host, o.GitHubOrg, o.orgs.ConfigRepo, *pr))
 	}
 
 	return nil

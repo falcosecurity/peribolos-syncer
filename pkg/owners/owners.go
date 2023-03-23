@@ -37,7 +37,6 @@ type Handle string
 
 // Owners represents a GitHub OWNERS flie.
 type Owners struct {
-
 	// Approvers is a list of users with ability to approve pull requests.
 	Approvers []string `json:"approvers"`
 
@@ -48,6 +47,9 @@ type Owners struct {
 	Reviewers []string `json:"reviewers"`
 }
 
+// OwnersOptions represents OWNERS loading options.
+//
+//nolint:revive
 type OwnersOptions struct {
 	OwnersRepo    string
 	OwnersBaseRef string
@@ -56,8 +58,10 @@ type OwnersOptions struct {
 
 func (o *OwnersOptions) Validate() error {
 	if o.OwnersRepo == "" {
+		//nolint:goerr113
 		return fmt.Errorf("OWNERS file's github repository name is empty")
 	}
+
 	return nil
 }
 

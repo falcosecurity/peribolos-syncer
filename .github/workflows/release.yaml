@@ -9,19 +9,25 @@ permissions:
   contents: write
 
 jobs:
-  release-cross:
-    runs-on: ubuntu-latest
+  goreleaser:
+    runs-on: ubuntu-22.04
     steps:
-      - name: checkout code
-        uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b #v3.0.2
         with:
-          submodules: 'true'
-      - run: git fetch --prune --unshallow
-      - name: Set up Go and dependencies
-        uses: actions/setup-go@v2
-      - name: Setup release environment
-        run: |-
-          echo 'GITHUB_TOKEN=${{secrets.GORELEASER_ACCESS_TOKEN}}' > .release-env
+          fetch-depth: 0
+      - name: Fetch
+        run: git fetch --prune --force --tags
+      - name: Setup Go and deps
+        uses: actions/setup-go@84cbf8094393cdc5fe1fe1671ff2647332956b1a #v3.2.1
+        with:
+          go-version: '1.20'
       - name: Publish release
-        run: make release
+        uses: goreleaser/goreleaser-action@f82d6c1c344bcacabba2c841718984797f664a6b #4.2.0
+        with:
+          distribution: goreleaser
+          version: v1.16.2
+          args: release --rm-dist
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

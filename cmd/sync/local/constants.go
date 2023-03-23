@@ -21,5 +21,5 @@ const (
 	flagPeribolosConfigFilepath    = "orgs-config"
 	defaultOwnersFilepath          = "OWNERS"
 	defaultPeribolosConfigFilepath = "org.yaml"
-	FilePerm                       = 0644
+	FilePerm                       = 0o644
 )

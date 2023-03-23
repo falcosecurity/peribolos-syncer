@@ -29,6 +29,8 @@ import (
 )
 
 // GitHubOptions represents options to interact with GitHub.
+//
+//nolint:revive
 type GitHubOptions struct {
 	Username string
 
@@ -47,11 +49,13 @@ func (o *GitHubOptions) AddPFlags(pfs *pflag.FlagSet) {
 	} {
 		group.AddFlags(fs)
 	}
+
 	pfs.AddGoFlagSet(fs)
 }
 
 func (o *GitHubOptions) ValidateAll() error {
 	if o.Username == "" {
+		//nolint:goerr113
 		return fmt.Errorf("github Username is empty")
 	}
 
@@ -60,6 +64,7 @@ func (o *GitHubOptions) ValidateAll() error {
 
 func (o *GitHubOptions) GetGitClientFactory() (gitv2.ClientFactory, error) {
 	s := ""
+
 	factory, err := o.GitClientFactory("", &s, o.DryRun)
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating git client")

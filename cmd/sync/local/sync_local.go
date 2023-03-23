@@ -18,15 +18,16 @@ package local
 
 import (
 	"fmt"
-	"github.com/maxgio92/peribolos-owners-syncer/pkg/sync"
-	"k8s.io/test-infra/prow/repoowners"
 	"os"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"k8s.io/test-infra/prow/repoowners"
 	"sigs.k8s.io/yaml"
 
+	"github.com/maxgio92/peribolos-owners-syncer/internal/output"
 	"github.com/maxgio92/peribolos-owners-syncer/pkg/orgs"
+	"github.com/maxgio92/peribolos-owners-syncer/pkg/sync"
 )
 
 type options struct {
@@ -59,10 +60,12 @@ func New() *cobra.Command {
 
 func (o *options) validate() error {
 	if o.GitHubOrg == "" {
+		//nolint:goerr113
 		return fmt.Errorf("org name is empty")
 	}
 
 	if o.GitHubTeam == "" {
+		//nolint:goerr113
 		return fmt.Errorf("team name is empty")
 	}
 
@@ -108,7 +111,7 @@ func (o *options) Run(cmd *cobra.Command, agrs []string) error {
 		return errors.Wrap(err, "error writing the recompiled Peribolos config")
 	}
 
-	fmt.Println("The Peribolos configuration has been updated.")
+	output.Print("The Peribolos configuration has been updated.")
 
 	return nil
 }
