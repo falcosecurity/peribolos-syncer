@@ -3,8 +3,6 @@ project_name: peribolos-owners-syncer
 before:
   hooks:
   - go mod tidy
-  - go generate ./...
-  - go vet ./...
 
 builds:
 - env:
@@ -26,7 +24,58 @@ checksum:
 
 changelog:
   sort: asc
-  filters:
-    exclude:
-    - '^[^S][^L][^-][^\d+]*'
+
+# creates SBOMs of all archives and the source tarball using syft
+# https://goreleaser.com/customization/sbom
+sboms:
+- id: archive
+  artifacts: archive
+- id: source
+  artifacts: source
+
+# signs the checksum file
+# all files (including the sboms) are included in the checksum, so we don't need to sign each one if we don't want to
+# https://goreleaser.com/customization/sign
+signs:
+- cmd: cosign
+  env:
+  - COSIGN_EXPERIMENTAL=1
+  certificate: '${artifact}.pem'
+  args:
+  - sign-blob
+  - '--output-certificate=${certificate}'
+  - '--output-signature=${signature}'
+  - '${artifact}'
+  - "--yes" # needed on cosign 2.0.0+
+  artifacts: checksum
+  output: true
+
+# create a docker image
+# https://goreleaser.com/customization/docker
+dockers:
+- image_templates:
+  - 'ghcr.io/maxgio92/{{.ProjectName}}:{{ .Tag }}'
+  - 'ghcr.io/maxgio92/{{.ProjectName}}:v{{ .Major }}.{{ .Minor }}'
+  - 'ghcr.io/maxgio92/{{.ProjectName}}:latest'
+  use: buildx
+  build_flag_templates:
+  - "--pull"
+  - "--label=org.opencontainers.image.created={{.Date}}"
+  - "--label=org.opencontainers.image.name={{.ProjectName}}"
+  - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+  - "--label=org.opencontainers.image.version={{.Version}}"
+  - "--label=org.opencontainers.image.source={{.GitURL}}"
+
+# signs our docker image
+# https://goreleaser.com/customization/docker_sign
+docker_signs:
+- cmd: cosign
+  env:
+  - COSIGN_EXPERIMENTAL=1
+  artifacts: images
+  output: true
+  args:
+  - 'sign'
+  - '${artifact}'
+  - "--yes" # needed on cosign 2.0.0+
 
