@@ -47,7 +47,7 @@ signs:
   - '--output-signature=${signature}'
   - '${artifact}'
   - "--yes" # needed on cosign 2.0.0+
-  artifacts: checksum
+  artifacts: all
   output: true
 
 # create a docker image
