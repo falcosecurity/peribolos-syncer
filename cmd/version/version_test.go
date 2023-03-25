@@ -26,16 +26,14 @@ import (
 )
 
 var _ = Describe("Version", func() {
-	var (
-		version = &version{
-			SemVersion: "0.0.0",
-			GitCommit:  "ef30d58",
-			BuildDate:  "2024-03-25_17:55:07",
-			GoVersion:  "go1.20",
-			Compiler:   "gc",
-			Platform:   "linux/test",
-		}
-	)
+	version := &version{
+		SemVersion: "0.0.0",
+		GitCommit:  "ef30d58",
+		BuildDate:  "2024-03-25_17:55:07",
+		GoVersion:  "go1.20",
+		Compiler:   "gc",
+		Platform:   "linux/test",
+	}
 
 	Context("testing version Print function", func() {
 		It("should not error", func() {
@@ -57,6 +55,7 @@ var _ = Describe("Version", func() {
 })
 
 func TestVersion(t *testing.T) {
+	t.Parallel()
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Version Suite")
 }

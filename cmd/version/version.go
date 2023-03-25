@@ -20,9 +20,9 @@ import (
 	"fmt"
 	"runtime"
 
-	"github.com/maxgio92/peribolos-owners-syncer/internal/output"
-
 	"github.com/spf13/cobra"
+
+	"github.com/maxgio92/peribolos-owners-syncer/internal/output"
 )
 
 var (
@@ -40,10 +40,10 @@ var (
 )
 
 type version struct {
-	SemVersion string `json:"semVersion"`
-	GitCommit  string `json:"gitCommit"`
-	BuildDate  string `json:"buildDate"`
-	GoVersion  string `json:"goVersion"`
+	SemVersion string `json:"sem_version"`
+	GitCommit  string `json:"git_commit"`
+	BuildDate  string `json:"build_date"`
+	GoVersion  string `json:"go_version"`
 	Compiler   string `json:"compiler"`
 	Platform   string `json:"platform"`
 }
@@ -69,7 +69,6 @@ func (o *version) Print() error {
 }
 
 func newVersion() version {
-
 	// These variables usually come from -ldflags settings and in their
 	// absence fallback to the ones defined in the var section.
 	return version{
