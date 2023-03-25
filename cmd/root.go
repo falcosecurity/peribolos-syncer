@@ -17,6 +17,7 @@ limitations under the License.
 package cmd
 
 import (
+	"github.com/maxgio92/peribolos-owners-syncer/cmd/version"
 	"github.com/spf13/cobra"
 
 	"github.com/maxgio92/peribolos-owners-syncer/cmd/sync"
@@ -31,8 +32,9 @@ func New() *cobra.Command {
 	cmd.Use = "orgs-owners-syncer"
 	cmd.Short = "A brief description of your application"
 
-	// Add sync subcommand.
+	// Add subcommands.
 	cmd.AddCommand(sync.New())
+	cmd.AddCommand(version.New())
 
 	return cmd
 }
