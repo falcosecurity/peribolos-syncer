@@ -19,13 +19,17 @@ package github
 import (
 	"flag"
 	"fmt"
+	"github.com/go-git/go-git/v5"
+	githttp "github.com/go-git/go-git/v5/plumbing/transport/http"
+	"net/url"
 	"os"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
 	"k8s.io/test-infra/pkg/flagutil"
-	prow "k8s.io/test-infra/prow/flagutil"
+	prowflags "k8s.io/test-infra/prow/flagutil"
 	gitv2 "k8s.io/test-infra/prow/git/v2"
+	prowgithub "k8s.io/test-infra/prow/github"
 )
 
 // GitHubOptions represents options to interact with GitHub.
@@ -36,7 +40,7 @@ type GitHubOptions struct {
 
 	DryRun bool
 
-	prow.GitHubOptions
+	prowflags.GitHubOptions
 }
 
 func (o *GitHubOptions) AddPFlags(pfs *pflag.FlagSet) {
@@ -71,4 +75,43 @@ func (o *GitHubOptions) GetGitClientFactory() (gitv2.ClientFactory, error) {
 	}
 
 	return factory, nil
+}
+
+func (o *GitHubOptions) ForkRepository(githubClient prowgithub.Client,
+	githubOrg, githubRepo, token string) (*git.Repository, *git.Worktree, string, error) {
+
+	githubClient.Used()
+	path, err := os.MkdirTemp("", "orgs")
+	if err != nil {
+		return nil, nil, "", errors.Wrap(err, "error creating temporary directory for cloning git repository")
+	}
+
+	fork, err := githubClient.EnsureFork(o.Username, githubOrg, githubRepo)
+	if err != nil {
+		return nil, nil, "", errors.Wrap(err, "error creating a fork of the orgs config repository")
+	}
+
+	configRepoURL, err := url.JoinPath(fmt.Sprintf("https://%s", o.Host), o.Username, fork)
+	if err != nil {
+		return nil, nil, "", errors.Wrap(err, "error generating orgs config repository URL")
+	}
+
+	repository, err := git.PlainClone(path, false, &git.CloneOptions{
+		Auth: &githttp.BasicAuth{
+			Username: o.Username,
+			Password: token,
+		},
+		URL:      configRepoURL,
+		Progress: nil,
+	})
+	if err != nil {
+		return nil, nil, "", errors.Wrap(err, "error cloning git repository")
+	}
+
+	worktree, err := repository.Worktree()
+	if err != nil {
+		return nil, nil, "", errors.Wrap(err, "error getting repository worktree")
+	}
+
+	return repository, worktree, path, nil
 }

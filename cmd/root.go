@@ -17,11 +17,11 @@ limitations under the License.
 package cmd
 
 import (
-	"github.com/maxgio92/peribolos-owners-syncer/cmd/version"
+	"github.com/maxgio92/peribolos-syncer/cmd/version"
 	"github.com/spf13/cobra"
 
-	"github.com/maxgio92/peribolos-owners-syncer/cmd/sync"
-	"github.com/maxgio92/peribolos-owners-syncer/internal/output"
+	"github.com/maxgio92/peribolos-syncer/cmd/sync"
+	"github.com/maxgio92/peribolos-syncer/internal/output"
 )
 
 var cfgFile string

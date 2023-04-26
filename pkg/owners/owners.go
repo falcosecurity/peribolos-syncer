@@ -19,6 +19,7 @@ package owners
 import (
 	"fmt"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
 	"k8s.io/test-infra/prow/config"
 	gitv2 "k8s.io/test-infra/prow/git/v2"
@@ -51,9 +52,9 @@ type Owners struct {
 //
 //nolint:revive
 type OwnersOptions struct {
-	OwnersRepo    string
-	OwnersBaseRef string
-	OwnersPath    string
+	OwnersRepo   string
+	OwnersGitRef string
+	OwnersPath   string
 }
 
 func (o *OwnersOptions) Validate() error {
@@ -67,11 +68,30 @@ func (o *OwnersOptions) Validate() error {
 
 func (o *OwnersOptions) AddPFlags(pfs *pflag.FlagSet) {
 	pfs.StringVar(&o.OwnersRepo, "owners-repository", "", "The name of the github repository from which parse OWNERS file")
-	pfs.StringVarP(&o.OwnersBaseRef, "owners-base-ref", "r", baseRef, "The base Git reference at which parse the OWNERS hierarchy")
-	pfs.StringVarP(&o.OwnersPath, "owners-file", "o", pathRoot, "The path to the OWNERS file from the root of the Git repository. Ignored with sync-github.")
+	pfs.StringVarP(&o.OwnersGitRef, "owners-git-ref", "r", baseRef, "The base Git reference at which parse the OWNERS hierarchy")
+	pfs.StringVarP(&o.OwnersPath, "owners-path", "o", pathRoot, "The path to the OWNERS file from the root of the Git repository. Ignored with sync-github.")
 }
 
-func (o *OwnersOptions) BuildClient(githubClient github.Client, gitClientFactory gitv2.ClientFactory) (*repoowners.Client, error) {
+// LoadFromGitHub loads the OWNERS hierarchy from the remote GitHub repository
+// of which organization, repository name and git branch are passed as arguments.
+// It possibly returns an error.
+func (o *OwnersOptions) LoadFromGitHub(githubCLient github.Client, gitClientFactory gitv2.ClientFactory,
+	githubOrg, githubRepo, gitReference string) (repoowners.RepoOwner, error) {
+	ownersClient, err := o.BuildClient(githubCLient, gitClientFactory)
+	if err != nil {
+		return nil, errors.Wrap(err, "error building owners client")
+	}
+
+	owners, err := ownersClient.LoadRepoOwners(githubOrg, githubRepo, gitReference)
+	if err != nil {
+		return nil, errors.Wrap(err, "error loading owners")
+	}
+
+	return owners, nil
+}
+
+func (o *OwnersOptions) BuildClient(githubClient github.Client,
+	gitClientFactory gitv2.ClientFactory) (*repoowners.Client, error) {
 	mdYAMLEnabled := func(org, repo string) bool {
 		return false
 	}
@@ -91,7 +111,8 @@ func (o *OwnersOptions) BuildClient(githubClient github.Client, gitClientFactory
 		}
 	}
 
-	ownersClient := repoowners.NewClient(gitClientFactory, githubClient, mdYAMLEnabled, skipCollaborators, ownersDirDenylist, resolver)
+	ownersClient := repoowners.NewClient(gitClientFactory, githubClient, mdYAMLEnabled,
+		skipCollaborators, ownersDirDenylist, resolver)
 
 	return ownersClient, nil
 }

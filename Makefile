@@ -1,4 +1,4 @@
-APP := peribolos-owners-syncer
+APP := peribolos-syncer
 VERSION := 0.1.1
 
 user := maxgio92

@@ -16,7 +16,7 @@ limitations under the License.
 
 package main
 
-import "github.com/maxgio92/peribolos-owners-syncer/cmd"
+import "github.com/maxgio92/peribolos-syncer/cmd"
 
 func main() {
 	cmd.Execute()

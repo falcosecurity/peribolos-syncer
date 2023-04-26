@@ -25,9 +25,9 @@ import (
 	"k8s.io/test-infra/prow/repoowners"
 	"sigs.k8s.io/yaml"
 
-	"github.com/maxgio92/peribolos-owners-syncer/internal/output"
-	"github.com/maxgio92/peribolos-owners-syncer/pkg/orgs"
-	"github.com/maxgio92/peribolos-owners-syncer/pkg/sync"
+	"github.com/maxgio92/peribolos-syncer/internal/output"
+	orgs "github.com/maxgio92/peribolos-syncer/pkg/peribolos"
+	"github.com/maxgio92/peribolos-syncer/pkg/sync"
 )
 
 type options struct {
@@ -98,7 +98,7 @@ func (o *options) Run(cmd *cobra.Command, agrs []string) error {
 		return errors.Wrap(err, "error unmarshaling Peribolos config")
 	}
 
-	if err = orgs.UpdateTeamMembers(orgsConfig, o.GitHubOrg, o.GitHubTeam, owners.Approvers); err != nil {
+	if err = orgs.AddTeamMembers(orgsConfig, o.GitHubOrg, o.GitHubTeam, owners.Approvers); err != nil {
 		return errors.Wrap(err, "error updating Peribolos' maintainers from OWNERS's approvers")
 	}
 
