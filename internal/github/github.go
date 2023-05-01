@@ -44,7 +44,7 @@ type GitHubOptions struct {
 }
 
 func (o *GitHubOptions) AddPFlags(pfs *pflag.FlagSet) {
-	pfs.BoolVar(&o.DryRun, "dry-run", true, "Dry run for testing. Uses API tokens but does not mutate.")
+	pfs.BoolVar(&o.DryRun, "dry-run", false, "Dry run for testing. Uses API tokens but does not mutate.")
 	pfs.StringVar(&o.Username, "github-username", "", "The GitHub username")
 
 	fs := flag.NewFlagSet(os.Args[0], flag.ExitOnError)

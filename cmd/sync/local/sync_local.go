@@ -44,8 +44,9 @@ func New() *cobra.Command {
 	}
 
 	cmd := &cobra.Command{
-		Use:   "local",
-		Short: "Synchronize Peribolos org.yaml file from OWNERS file in the local filesystem",
+		Use:     commandName,
+		Short:   commandShortDescription,
+		Example: commandExample,
 	}
 
 	cmd.RunE = o.Run

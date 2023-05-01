@@ -5,6 +5,7 @@ go 1.20
 require (
 	bitbucket.org/creachadair/stringset v0.0.9
 	github.com/ProtonMail/go-crypto v0.0.0-20210428141323-04723f9f07d7
+	github.com/go-git/go-billy/v5 v5.3.1
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/google/uuid v1.3.0
 	github.com/onsi/ginkgo/v2 v2.1.4
@@ -41,6 +42,7 @@ require (
 	github.com/blendle/zapdriver v1.3.1 // indirect
 	github.com/census-instrumentation/opencensus-proto v0.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
+	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/danwakefield/fnmatch v0.0.0-20160403171240-cbb64ac3d964 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/denormal/go-gitignore v0.0.0-20180930084346-ae8ad1d07817 // indirect
@@ -54,7 +56,6 @@ require (
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/fvbommel/sortorder v1.0.1 // indirect
 	github.com/go-git/gcfg v1.5.0 // indirect
-	github.com/go-git/go-billy/v5 v5.3.1 // indirect
 	github.com/go-kit/log v0.1.0 // indirect
 	github.com/go-logfmt/logfmt v0.5.0 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
@@ -105,6 +106,7 @@ require (
 	github.com/prometheus/common v0.32.1 // indirect
 	github.com/prometheus/procfs v0.7.3 // indirect
 	github.com/prometheus/statsd_exporter v0.21.0 // indirect
+	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sergi/go-diff v1.1.0 // indirect
 	github.com/shurcooL/githubv4 v0.0.0-20210725200734-83ba7b4c9228 // indirect
 	github.com/shurcooL/graphql v0.0.0-20181231061246-d48a9a75455f // indirect

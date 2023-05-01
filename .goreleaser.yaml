@@ -1,4 +1,4 @@
-project_name: peribolos-owners-syncer
+project_name: kamajicli
 
 before:
   hooks:
@@ -50,21 +50,18 @@ signs:
   artifacts: all
   output: true
 
-# create a docker image
-# https://goreleaser.com/customization/docker
-dockers:
-- image_templates:
-  - 'ghcr.io/maxgio92/{{.ProjectName}}:{{ .Tag }}'
-  - 'ghcr.io/maxgio92/{{.ProjectName}}:v{{ .Major }}.{{ .Minor }}'
-  - 'ghcr.io/maxgio92/{{.ProjectName}}:latest'
-  use: buildx
-  build_flag_templates:
-  - "--pull"
-  - "--label=org.opencontainers.image.created={{.Date}}"
-  - "--label=org.opencontainers.image.name={{.ProjectName}}"
-  - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-  - "--label=org.opencontainers.image.version={{.Version}}"
-  - "--label=org.opencontainers.image.source={{.GitURL}}"
+kos:
+- base_image: cgr.dev/chainguard/static
+  repository: ghcr.io/maxgio92/kamajicli
+  bare: true
+  tags:
+  - '{{ .Version }}'
+  - '{{ .Major }}.{{ .Minor }}'
+  - latest
+  platforms:
+  - linux/amd64
+  - linux/arm64
+  sbom: spdx
 
 # signs our docker image
 # https://goreleaser.com/customization/docker_sign
@@ -72,7 +69,7 @@ docker_signs:
 - cmd: cosign
   env:
   - COSIGN_EXPERIMENTAL=1
-  artifacts: images
+  artifacts: all
   output: true
   args:
   - 'sign'

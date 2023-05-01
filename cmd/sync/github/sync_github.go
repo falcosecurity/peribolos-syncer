@@ -65,9 +65,10 @@ func New() *cobra.Command {
 	}
 
 	cmd := &cobra.Command{
-		Use:   "github",
-		Short: "Synchronize Peribolos org.yaml file from OWNERS file on remote github repositories via Pull Request",
-		RunE:  o.Run,
+		Use:     commandName,
+		Short:   commandShortDescription,
+		Example: commandExample,
+		RunE:    o.Run,
 	}
 
 	// Organization sync options.

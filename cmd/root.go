@@ -24,13 +24,12 @@ import (
 	"github.com/maxgio92/peribolos-syncer/internal/output"
 )
 
-var cfgFile string
-
 // New returns a new root command.
 func New() *cobra.Command {
 	cmd := &cobra.Command{}
-	cmd.Use = "orgs-owners-syncer"
-	cmd.Short = "A brief description of your application"
+	cmd.Use = CommandName
+	cmd.Long = CommandLongDescription
+	cmd.DisableAutoGenTag = true
 
 	// Add subcommands.
 	cmd.AddCommand(sync.New())
