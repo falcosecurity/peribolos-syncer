@@ -1,4 +1,4 @@
-project_name: kamajicli
+project_name: peribolos-syncer
 
 before:
   hooks:
@@ -52,7 +52,7 @@ signs:
 
 kos:
 - base_image: cgr.dev/chainguard/static
-  repository: ghcr.io/maxgio92/kamajicli
+  repository: ghcr.io/maxgio92/peribolos-syncer
   bare: true
   tags:
   - '{{ .Version }}'
