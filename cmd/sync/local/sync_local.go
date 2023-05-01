@@ -18,6 +18,7 @@ package local
 
 import (
 	"fmt"
+	"github.com/maxgio92/peribolos-syncer/internal/sync"
 	"os"
 
 	"github.com/pkg/errors"
@@ -27,20 +28,19 @@ import (
 
 	"github.com/maxgio92/peribolos-syncer/internal/output"
 	orgs "github.com/maxgio92/peribolos-syncer/pkg/peribolos"
-	"github.com/maxgio92/peribolos-syncer/pkg/sync"
 )
 
 type options struct {
 	peribolosConfigFilepath string
 	ownersFilepath          string
 
-	*sync.Options
+	*sync.CommonOptions
 }
 
 // New returns a new sync local command.
 func New() *cobra.Command {
 	o := &options{
-		Options: &sync.Options{},
+		CommonOptions: &sync.CommonOptions{},
 	}
 
 	cmd := &cobra.Command{

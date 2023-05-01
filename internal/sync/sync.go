@@ -16,8 +16,8 @@ limitations under the License.
 
 package sync
 
-// Options represent the orgs config sync options.
-type Options struct {
+// CommonOptions represent the sync command common options.
+type CommonOptions struct {
 	GitHubTeam string
 	GitHubOrg  string
 }

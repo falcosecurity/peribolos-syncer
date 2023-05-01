@@ -18,6 +18,9 @@ package github
 
 import (
 	"fmt"
+	syncergithub "github.com/maxgio92/peribolos-syncer/internal/github"
+	"github.com/maxgio92/peribolos-syncer/internal/owners"
+	"github.com/maxgio92/peribolos-syncer/internal/sync"
 	"os"
 	"path"
 
@@ -34,15 +37,12 @@ import (
 
 	syncergit "github.com/maxgio92/peribolos-syncer/internal/git"
 	"github.com/maxgio92/peribolos-syncer/internal/output"
-	syncergithub "github.com/maxgio92/peribolos-syncer/pkg/github"
-	"github.com/maxgio92/peribolos-syncer/pkg/owners"
 	orgs "github.com/maxgio92/peribolos-syncer/pkg/peribolos"
 	"github.com/maxgio92/peribolos-syncer/pkg/pgp"
-	"github.com/maxgio92/peribolos-syncer/pkg/sync"
 )
 
 type options struct {
-	*sync.Options
+	*sync.CommonOptions
 
 	author            gitobject.Signature
 	privateGPGKeyPath string
@@ -57,11 +57,11 @@ type options struct {
 // New returns a new sync github command.
 func New() *cobra.Command {
 	o := &options{
-		Options: &sync.Options{},
-		author:  gitobject.Signature{},
-		github:  syncergithub.GitHubOptions{},
-		owners:  &owners.OwnersOptions{},
-		orgs:    &orgs.PeribolosOptions{},
+		CommonOptions: &sync.CommonOptions{},
+		author:        gitobject.Signature{},
+		github:        syncergithub.GitHubOptions{},
+		owners:        &owners.OwnersOptions{},
+		orgs:          &orgs.PeribolosOptions{},
 	}
 
 	cmd := &cobra.Command{
@@ -150,7 +150,7 @@ func (o *options) Run(_ *cobra.Command, _ []string) error {
 	}
 
 	// Load Owners hierarchy from specified repository.
-	owners, err := o.loadOwnersFromGithub(githubClient, o.GitHubOrg, o.owners.OwnersRepo, o.owners.OwnersGitRef)
+	owners, err := o.loadOwnersFromGithub(githubClient)
 	if err != nil {
 		return err
 	}
@@ -249,17 +249,16 @@ Signed-off-by: %s <%s>
 	return nil
 }
 
-func (o *options) loadOwnersFromGithub(githubClient github.Client, githubOrg, gitRepo, gitRef string) (repoowners.RepoOwner, error) {
+func (o *options) loadOwnersFromGithub(githubClient github.Client) (repoowners.RepoOwner, error) {
 	gitClientFactory, err := o.github.GetGitClientFactory()
 	if err != nil {
 		return nil, errors.Wrap(err, "error building git client gitClientFactory")
 	}
 
+	ownersClient := o.owners.NewClient(githubClient, gitClientFactory)
+
 	// Load Owners hierarchy from specified repository.
-	owners, err := o.owners.LoadFromGitHub(
-		githubClient, gitClientFactory,
-		githubOrg, gitRepo, gitRef,
-	)
+	owners, err := ownersClient.LoadRepoOwners(o.GitHubOrg, o.owners.OwnersRepo, o.owners.OwnersGitRef)
 	if err != nil {
 		return nil, errors.Wrap(err, "error loading owners from repository")
 	}

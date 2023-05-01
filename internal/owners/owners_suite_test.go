@@ -1,4 +1,4 @@
-package pgp_test
+package owners_test
 
 import (
 	"testing"
@@ -7,8 +7,8 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestPGP(t *testing.T) {
+func TestOwners(t *testing.T) {
 	t.Parallel()
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "PGP Suite")
+	RunSpecs(t, "Owners Suite")
 }

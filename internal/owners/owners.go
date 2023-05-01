@@ -18,8 +18,6 @@ package owners
 
 import (
 	"fmt"
-
-	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
 	"k8s.io/test-infra/prow/config"
 	gitv2 "k8s.io/test-infra/prow/git/v2"
@@ -57,41 +55,11 @@ type OwnersOptions struct {
 	OwnersPath   string
 }
 
-func (o *OwnersOptions) Validate() error {
-	if o.OwnersRepo == "" {
-		//nolint:goerr113
-		return fmt.Errorf("OWNERS file's github repository name is empty")
-	}
-
-	return nil
-}
-
-func (o *OwnersOptions) AddPFlags(pfs *pflag.FlagSet) {
-	pfs.StringVar(&o.OwnersRepo, "owners-repository", "", "The name of the github repository from which parse OWNERS file")
-	pfs.StringVarP(&o.OwnersGitRef, "owners-git-ref", "r", baseRef, "The base Git reference at which parse the OWNERS hierarchy")
-	pfs.StringVarP(&o.OwnersPath, "owners-path", "o", pathRoot, "The path to the OWNERS file from the root of the Git repository. Ignored with sync-github.")
-}
-
-// LoadFromGitHub loads the OWNERS hierarchy from the remote GitHub repository
-// of which organization, repository name and git branch are passed as arguments.
+// NewClient returns a new repoowners.Client from a prow/github.Client and prow/git/v2.ClientFactory.
+// It wraps around repoowners.NewClient facilitating the client build configuration with default settings.
 // It possibly returns an error.
-func (o *OwnersOptions) LoadFromGitHub(githubCLient github.Client, gitClientFactory gitv2.ClientFactory,
-	githubOrg, githubRepo, gitReference string) (repoowners.RepoOwner, error) {
-	ownersClient, err := o.BuildClient(githubCLient, gitClientFactory)
-	if err != nil {
-		return nil, errors.Wrap(err, "error building owners client")
-	}
-
-	owners, err := ownersClient.LoadRepoOwners(githubOrg, githubRepo, gitReference)
-	if err != nil {
-		return nil, errors.Wrap(err, "error loading owners")
-	}
-
-	return owners, nil
-}
-
-func (o *OwnersOptions) BuildClient(githubClient github.Client,
-	gitClientFactory gitv2.ClientFactory) (*repoowners.Client, error) {
+func (o *OwnersOptions) NewClient(githubClient github.Client,
+	gitClientFactory gitv2.ClientFactory) *repoowners.Client {
 	mdYAMLEnabled := func(org, repo string) bool {
 		return false
 	}
@@ -114,5 +82,20 @@ func (o *OwnersOptions) BuildClient(githubClient github.Client,
 	ownersClient := repoowners.NewClient(gitClientFactory, githubClient, mdYAMLEnabled,
 		skipCollaborators, ownersDirDenylist, resolver)
 
-	return ownersClient, nil
+	return ownersClient
+}
+
+func (o *OwnersOptions) Validate() error {
+	if o.OwnersRepo == "" {
+		//nolint:goerr113
+		return fmt.Errorf("owners file's github repository is empty")
+	}
+
+	return nil
+}
+
+func (o *OwnersOptions) AddPFlags(pfs *pflag.FlagSet) {
+	pfs.StringVar(&o.OwnersRepo, "owners-repository", "", "The name of the github repository from which parse OWNERS file")
+	pfs.StringVarP(&o.OwnersGitRef, "owners-git-ref", "r", baseRef, "The base Git reference at which parse the OWNERS hierarchy")
+	pfs.StringVarP(&o.OwnersPath, "owners-path", "o", pathRoot, "The path to the OWNERS file from the root of the Git repository. Ignored with sync-github.")
 }
