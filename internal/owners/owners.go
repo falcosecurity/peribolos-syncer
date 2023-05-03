@@ -18,6 +18,7 @@ package owners
 
 import (
 	"fmt"
+
 	"github.com/spf13/pflag"
 	"k8s.io/test-infra/prow/config"
 	gitv2 "k8s.io/test-infra/prow/git/v2"
@@ -27,38 +28,54 @@ import (
 )
 
 const (
-	baseRef  = "master"
-	pathRoot = ""
+	baseRef = "master"
 )
 
 // Handle represents a GitHub user handle.
 type Handle string
 
-// Owners represents a GitHub OWNERS flie.
-type Owners struct {
-	// Approvers is a list of users with ability to approve pull requests.
-	Approvers []string `json:"approvers"`
-
-	// EmeritusApprovers is a list of users which served for time as approvers.
-	EmeritusApprovers []string `json:"emeritus_approvers"`
-
-	// Reviewers is a list of users with ability to review pull requests.
-	Reviewers []string `json:"reviewers"`
-}
-
-// OwnersOptions represents OWNERS loading options.
+// OwnersLoadingOptions represents OWNERS loading options.
 //
 //nolint:revive
-type OwnersOptions struct {
-	OwnersRepo   string
-	OwnersGitRef string
-	OwnersPath   string
+type OwnersLoadingOptions struct {
+
+	// RepositoryName represents the git repository name at which load the Owners config.
+	RepositoryName string
+
+	// GitRef represents the git reference at which load the Owners config.
+	GitRef string
+
+	// ConfigPath represents the path to the Owners config file in the repository.
+	ConfigPath string
+
+	// ApproversOnly represents the option to load only the approvers.
+	ApproversOnly bool
+
+	// ReviewersOnly represents the option to load only the reviewers.
+	ReviewersOnly bool
+}
+
+func (o *OwnersLoadingOptions) Validate() error {
+	if o.RepositoryName == "" {
+		//nolint:goerr113
+		return fmt.Errorf("owners file's github repository is empty")
+	}
+
+	return nil
+}
+
+func (o *OwnersLoadingOptions) AddPFlags(pfs *pflag.FlagSet) {
+	pfs.StringVar(&o.RepositoryName, "owners-repository", "", "The name of the github repository from which parse OWNERS file")
+	pfs.StringVarP(&o.GitRef, "owners-git-ref", "r", baseRef, "The base Git reference at which parse the OWNERS hierarchy")
+	pfs.StringVar(&o.ConfigPath, "owners-config-path", "", "The path to the Owners config file from the root of the Git repository. When specified, they are considered people for which the roles are applied from the root until the specified path.")
+	pfs.BoolVar(&o.ApproversOnly, "approvers-only", false, "Whether to load only the approvers from the Owners config")
+	pfs.BoolVar(&o.ReviewersOnly, "reviewers-only", false, "Whether to load only the reviewers from the Owners config")
 }
 
 // NewClient returns a new repoowners.Client from a prow/github.Client and prow/git/v2.ClientFactory.
 // It wraps around repoowners.NewClient facilitating the client build configuration with default settings.
 // It possibly returns an error.
-func (o *OwnersOptions) NewClient(githubClient github.Client,
+func NewClient(githubClient github.Client,
 	gitClientFactory gitv2.ClientFactory) *repoowners.Client {
 	mdYAMLEnabled := func(org, repo string) bool {
 		return false
@@ -83,19 +100,4 @@ func (o *OwnersOptions) NewClient(githubClient github.Client,
 		skipCollaborators, ownersDirDenylist, resolver)
 
 	return ownersClient
-}
-
-func (o *OwnersOptions) Validate() error {
-	if o.OwnersRepo == "" {
-		//nolint:goerr113
-		return fmt.Errorf("owners file's github repository is empty")
-	}
-
-	return nil
-}
-
-func (o *OwnersOptions) AddPFlags(pfs *pflag.FlagSet) {
-	pfs.StringVar(&o.OwnersRepo, "owners-repository", "", "The name of the github repository from which parse OWNERS file")
-	pfs.StringVarP(&o.OwnersGitRef, "owners-git-ref", "r", baseRef, "The base Git reference at which parse the OWNERS hierarchy")
-	pfs.StringVarP(&o.OwnersPath, "owners-path", "o", pathRoot, "The path to the OWNERS file from the root of the Git repository. Ignored with sync-github.")
 }

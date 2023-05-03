@@ -18,9 +18,6 @@ package github
 
 import (
 	"fmt"
-	syncergithub "github.com/maxgio92/peribolos-syncer/internal/github"
-	"github.com/maxgio92/peribolos-syncer/internal/owners"
-	"github.com/maxgio92/peribolos-syncer/internal/sync"
 	"os"
 	"path"
 
@@ -36,7 +33,10 @@ import (
 	"sigs.k8s.io/yaml"
 
 	syncergit "github.com/maxgio92/peribolos-syncer/internal/git"
+	syncergithub "github.com/maxgio92/peribolos-syncer/internal/github"
 	"github.com/maxgio92/peribolos-syncer/internal/output"
+	"github.com/maxgio92/peribolos-syncer/internal/owners"
+	"github.com/maxgio92/peribolos-syncer/internal/sync"
 	orgs "github.com/maxgio92/peribolos-syncer/pkg/peribolos"
 	"github.com/maxgio92/peribolos-syncer/pkg/pgp"
 )
@@ -50,7 +50,8 @@ type options struct {
 
 	github syncergithub.GitHubOptions
 	orgs   *orgs.PeribolosOptions
-	owners *owners.OwnersOptions
+	owners *owners.OwnersLoadingOptions
+
 	git.ListOptions
 }
 
@@ -60,7 +61,7 @@ func New() *cobra.Command {
 		CommonOptions: &sync.CommonOptions{},
 		author:        gitobject.Signature{},
 		github:        syncergithub.GitHubOptions{},
-		owners:        &owners.OwnersOptions{},
+		owners:        &owners.OwnersLoadingOptions{},
 		orgs:          &orgs.PeribolosOptions{},
 	}
 
@@ -147,7 +148,7 @@ func (o *options) Run(_ *cobra.Command, _ []string) error {
 	// Build GitHub client.
 	githubClient, err := o.github.GitHubClientWithAccessToken(string(token))
 	if err != nil {
-		return errors.Wrap(err, "error generating GitHub client with specified access token")
+		return errors.Wrap(err, "error generating github client with specified access token")
 	}
 
 	// Load Owners hierarchy from specified repository.
@@ -156,8 +157,8 @@ func (o *options) Run(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	// Get the leaf approvers from the Owners hierarchy.
-	approvers := maps.Keys(owners.LeafApprovers(o.owners.OwnersPath))
+	// Load specified people from the Owners structure.
+	people := o.loadPeopleFromOwners(owners)
 
 	// Clone the peribolos config repository.
 	repo, worktree, local, err := o.github.ForkRepository(
@@ -179,7 +180,7 @@ func (o *options) Run(_ *cobra.Command, _ []string) error {
 	}
 
 	// Synchronize the Github Team config with Approvers.
-	if err := orgs.AddTeamMembers(config, o.GitHubOrg, o.GitHubTeam, approvers); err != nil {
+	if err := orgs.AddTeamMembers(config, o.GitHubOrg, o.GitHubTeam, people); err != nil {
 		return errors.Wrap(err, "error updating maintainers github team from leaf approvers")
 	}
 
@@ -191,7 +192,7 @@ func (o *options) Run(_ *cobra.Command, _ []string) error {
 	// Store the change in a commitAll with a log.
 	commitMsg := fmt.Sprintf(`chore(%s): update %s team members
 
-The update reflects the content of the related repository root's OWNERS.
+The update reflects the content of the related repository's OWNERS tree.
 %s
 
 Signed-off-by: %s <%s>
@@ -224,17 +225,17 @@ Signed-off-by: %s <%s>
 		pr, err := githubClient.CreatePullRequest(
 			o.GitHubOrg,
 			o.orgs.ConfigRepo,
-			fmt.Sprintf("Sync Github Team %s with %s owners", o.GitHubTeam, o.owners.OwnersRepo),
+			fmt.Sprintf("Sync Github Team %s with %s owners", o.GitHubTeam, o.owners.RepositoryName),
 			fmt.Sprintf(`This PR synchronizes the Github Team %s with the leaf approvers declared in %s repository's [OWNERS](%s) file.
 
 %s
-`, o.GitHubTeam, o.owners.OwnersRepo, ownersDoc, syncerSignature),
+`, o.GitHubTeam, o.owners.RepositoryName, ownersDoc, syncerSignature),
 			fmt.Sprintf("%s:%s", o.github.Username, ref),
 			o.orgs.ConfigBaseRef,
 			false,
 		)
 		if err != nil {
-			return errors.Wrap(err, "error creating GitHub Pull Request")
+			return errors.Wrap(err, "error creating github pull request")
 		}
 
 		output.Print(
@@ -253,18 +254,49 @@ Signed-off-by: %s <%s>
 func (o *options) loadOwnersFromGithub(githubClient github.Client) (repoowners.RepoOwner, error) {
 	gitClientFactory, err := o.github.GetGitClientFactory()
 	if err != nil {
-		return nil, errors.Wrap(err, "error building git client gitClientFactory")
+		return nil, errors.Wrap(err, "error building git client gitclientfactory")
 	}
 
-	ownersClient := o.owners.NewClient(githubClient, gitClientFactory)
+	ownersClient := owners.NewClient(githubClient, gitClientFactory)
 
 	// Load Owners hierarchy from specified repository.
-	owners, err := ownersClient.LoadRepoOwners(o.GitHubOrg, o.owners.OwnersRepo, o.owners.OwnersGitRef)
+	owners, err := ownersClient.LoadRepoOwners(o.GitHubOrg, o.owners.RepositoryName, o.owners.GitRef)
 	if err != nil {
 		return nil, errors.Wrap(err, "error loading owners from repository")
 	}
 
 	return owners, nil
+}
+
+func (o *options) loadPeopleFromOwners(owners repoowners.RepoOwner) []string {
+	var people []string
+
+	switch {
+	// Limiting the scope of the roles.
+	case o.owners.ConfigPath != "":
+		if o.owners.ApproversOnly {
+			// Approvers of the subpart of the repository.
+			people = maps.Keys(owners.Approvers(o.owners.ConfigPath).Set())
+		} else if o.owners.ReviewersOnly {
+			// Reviewers of the subpart of the repository.
+			people = maps.Keys(owners.Reviewers(o.owners.ConfigPath).Set())
+		} else {
+			// Both approvers and reviewers of the subpart of the repository.
+			people = maps.Keys(owners.Approvers(o.owners.ConfigPath).
+				Union(owners.Reviewers(o.owners.ConfigPath)).Set())
+		}
+	// Approvers of the whole repository.
+	case o.owners.ApproversOnly:
+		people = maps.Keys(owners.AllApprovers())
+	// Reviewers of the whole repository.
+	case o.owners.ReviewersOnly:
+		people = maps.Keys(owners.AllReviewers())
+	// Both approvers and reviewers of the whole repository.
+	default:
+		people = maps.Keys(owners.AllOwners())
+	}
+
+	return people
 }
 
 func (o *options) flushConfig(config *peribolos.FullConfig, configPath string) error {
