@@ -18,7 +18,6 @@ package local
 
 import (
 	"fmt"
-	"github.com/maxgio92/peribolos-syncer/internal/sync"
 	"os"
 
 	"github.com/pkg/errors"
@@ -27,6 +26,7 @@ import (
 	"sigs.k8s.io/yaml"
 
 	"github.com/maxgio92/peribolos-syncer/internal/output"
+	"github.com/maxgio92/peribolos-syncer/internal/sync"
 	orgs "github.com/maxgio92/peribolos-syncer/pkg/peribolos"
 )
 

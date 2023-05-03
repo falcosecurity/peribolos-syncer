@@ -26,7 +26,6 @@ var _ = Describe("Creating new client", func() {
 		githubClient     github.Client
 		flagset          *flag.FlagSet
 		gitClientFactory gitv2.ClientFactory
-		ownersOptions    *OwnersOptions
 	)
 
 	BeforeEach(func() {
@@ -50,13 +49,7 @@ var _ = Describe("Creating new client", func() {
 		s := ""
 		gitClientFactory, _ = githubOptions.GitClientFactory("", &s, true)
 
-		ownersOptions = &OwnersOptions{
-			OwnersRepo:   repo,
-			OwnersGitRef: ref,
-			OwnersPath:   ownersPath,
-		}
-
-		ownersClient = ownersOptions.NewClient(githubClient, gitClientFactory)
+		ownersClient = NewClient(githubClient, gitClientFactory)
 	})
 
 	It("should not be nil", func() {

@@ -13,7 +13,8 @@ $(foreach bin,$(bins),\
 
 .PHONY: ginkgo
 ginkgo:
-	@$(go) install github.com/onsi/ginkgo/v2/ginkgo
+	@hash ginkgo || \
+		$(go) install github.com/onsi/ginkgo/v2/ginkgo
 
 .PHONY: docs
 docs:

@@ -26,6 +26,7 @@ peribolos-syncer sync github --org=acme --team=app-maintainers
 ### Options
 
 ```
+      --approvers-only                           Whether to load only the approvers from the Owners config
       --dry-run                                  Dry run for testing. Uses API tokens but does not mutate.
       --git-author-email string                  The Git author email with which write commits for the update of the Peribolos config
       --git-author-name string                   The Git author name with which write commits for the update of the Peribolos config
@@ -48,12 +49,13 @@ peribolos-syncer sync github --org=acme --team=app-maintainers
       --gpg-public-key string                    The path to the public GPG key for signing git commits
   -h, --help                                     help for github
       --org string                               The name of the GitHub organization to update configuration for
+      --owners-config-path string                The path to the Owners config file from the root of the Git repository. When specified, they are considered people for which the roles are applied from the root until the specified path.
   -r, --owners-git-ref string                    The base Git reference at which parse the OWNERS hierarchy (default "master")
-  -o, --owners-path string                       The path to the OWNERS file from the root of the Git repository. Ignored with sync-github.
       --owners-repository string                 The name of the github repository from which parse OWNERS file
       --peribolos-config-git-ref string          The base Git reference at which pull the peribolos config repository (default "master")
   -c, --peribolos-config-path string             The path to the peribolos organization config file from the root of the Git repository (default "org.yaml")
       --peribolos-config-repository string       The name of the github repository that contains the peribolos organization config file
+      --reviewers-only                           Whether to load only the reviewers from the Owners config
       --team string                              The name of the GitHub team to update configuration for
 ```
 
