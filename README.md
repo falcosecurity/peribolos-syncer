@@ -8,7 +8,7 @@ It synchronizes GitHub Team configurations with external GitHub people source of
 
 The currently supported GitHub people source of truth are:
 
-* [OWNERS](https://docs.prow.k8s.io/docs/components/plugins/approve/approvers/#overview) `approvers`.
+* [OWNERS](https://docs.prow.k8s.io/docs/components/plugins/approve/approvers/#overview).
 
 ## Usage
 
