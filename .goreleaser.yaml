@@ -52,7 +52,7 @@ signs:
 
 kos:
 - base_image: cgr.dev/chainguard/static
-  repository: ghcr.io/maxgio92/peribolos-syncer
+  repository: ghcr.io/falcosecurity/peribolos-syncer
   bare: true
   tags:
   - '{{ .Version }}'
