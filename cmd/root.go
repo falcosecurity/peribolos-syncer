@@ -17,11 +17,11 @@ limitations under the License.
 package cmd
 
 import (
-	"github.com/maxgio92/peribolos-syncer/cmd/version"
 	"github.com/spf13/cobra"
 
-	"github.com/maxgio92/peribolos-syncer/cmd/sync"
-	"github.com/maxgio92/peribolos-syncer/internal/output"
+	"github.com/falcosecurity/peribolos-syncer/cmd/sync"
+	"github.com/falcosecurity/peribolos-syncer/cmd/version"
+	"github.com/falcosecurity/peribolos-syncer/internal/output"
 )
 
 // New returns a new root command.

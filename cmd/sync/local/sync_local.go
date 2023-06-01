@@ -25,9 +25,9 @@ import (
 	"k8s.io/test-infra/prow/repoowners"
 	"sigs.k8s.io/yaml"
 
-	"github.com/maxgio92/peribolos-syncer/internal/output"
-	"github.com/maxgio92/peribolos-syncer/internal/sync"
-	orgs "github.com/maxgio92/peribolos-syncer/pkg/peribolos"
+	"github.com/falcosecutity/peribolos-syncer/internal/output"
+	"github.com/falcosecutity/peribolos-syncer/internal/sync"
+	orgs "github.com/falcosecutity/peribolos-syncer/pkg/peribolos"
 )
 
 type options struct {

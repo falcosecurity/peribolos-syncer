@@ -32,13 +32,13 @@ import (
 	"k8s.io/test-infra/prow/repoowners"
 	"sigs.k8s.io/yaml"
 
-	syncergit "github.com/maxgio92/peribolos-syncer/internal/git"
-	syncergithub "github.com/maxgio92/peribolos-syncer/internal/github"
-	"github.com/maxgio92/peribolos-syncer/internal/output"
-	"github.com/maxgio92/peribolos-syncer/internal/owners"
-	"github.com/maxgio92/peribolos-syncer/internal/sync"
-	orgs "github.com/maxgio92/peribolos-syncer/pkg/peribolos"
-	"github.com/maxgio92/peribolos-syncer/pkg/pgp"
+	syncergit "github.com/falcosecurity/peribolos-syncer/internal/git"
+	syncergithub "github.com/falcosecurity/peribolos-syncer/internal/github"
+	"github.com/falcosecurity/peribolos-syncer/internal/output"
+	"github.com/falcosecurity/peribolos-syncer/internal/owners"
+	"github.com/falcosecurity/peribolos-syncer/internal/sync"
+	orgs "github.com/falcosecurity/peribolos-syncer/pkg/peribolos"
+	"github.com/falcosecurity/peribolos-syncer/pkg/pgp"
 )
 
 type options struct {
