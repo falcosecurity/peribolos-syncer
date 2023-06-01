@@ -1,16 +1,17 @@
 package pgp_test
 
 import (
+	"io"
+	"strings"
+
 	"github.com/ProtonMail/go-crypto/openpgp"
 	"github.com/ProtonMail/go-crypto/openpgp/armor"
 	"github.com/ProtonMail/go-crypto/openpgp/packet"
 	"github.com/go-git/go-billy/v5/memfs"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"io"
-	"strings"
 
-	"github.com/maxgio92/peribolos-syncer/pkg/pgp"
+	"github.com/falcosecurity/peribolos-syncer/pkg/pgp"
 )
 
 var _ = Describe("Decoding a PGP private key", func() {

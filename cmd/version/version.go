@@ -22,7 +22,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/maxgio92/peribolos-syncer/internal/output"
+	"github.com/falcosecurity/peribolos-syncer/internal/output"
 )
 
 var (

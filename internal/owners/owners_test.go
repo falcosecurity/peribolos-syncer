@@ -10,7 +10,7 @@ import (
 	"k8s.io/test-infra/prow/github"
 	"k8s.io/test-infra/prow/repoowners"
 
-	. "github.com/maxgio92/peribolos-syncer/internal/owners"
+	. "github.com/falcosecurity/peribolos-syncer/internal/owners"
 )
 
 const (

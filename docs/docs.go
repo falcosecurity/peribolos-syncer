@@ -8,7 +8,7 @@ import (
 
 	"github.com/spf13/cobra/doc"
 
-	"github.com/maxgio92/peribolos-syncer/cmd"
+	"github.com/falcosecurity/peribolos-syncer/cmd"
 )
 
 const (
