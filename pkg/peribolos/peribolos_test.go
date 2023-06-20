@@ -4,11 +4,12 @@ import (
 	"fmt"
 
 	"github.com/go-git/go-billy/v5/memfs"
-	. "github.com/maxgio92/peribolos-syncer/pkg/peribolos"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	peribolos "k8s.io/test-infra/prow/config/org"
 	"sigs.k8s.io/yaml"
+
+	. "github.com/falcosecurity/peribolos-syncer/pkg/peribolos"
 )
 
 const (

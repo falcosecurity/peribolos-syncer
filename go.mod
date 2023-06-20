@@ -1,4 +1,4 @@
-module github.com/maxgio92/peribolos-syncer
+module github.com/falcosecurity/peribolos-syncer
 
 go 1.20
 

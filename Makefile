@@ -1,6 +1,5 @@
 APP := peribolos-syncer
 
-user := maxgio92
 bins := git go gofumpt golangci-lint ginkgo
 
 define declare_binpaths

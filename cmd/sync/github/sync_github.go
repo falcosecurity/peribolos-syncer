@@ -1,19 +1,3 @@
-/*
-Copyright © 2023 maxgio92 me@maxgio.me
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
 package github
 
 import (
@@ -32,13 +16,13 @@ import (
 	"k8s.io/test-infra/prow/repoowners"
 	"sigs.k8s.io/yaml"
 
-	syncergit "github.com/maxgio92/peribolos-syncer/internal/git"
-	syncergithub "github.com/maxgio92/peribolos-syncer/internal/github"
-	"github.com/maxgio92/peribolos-syncer/internal/output"
-	"github.com/maxgio92/peribolos-syncer/internal/owners"
-	"github.com/maxgio92/peribolos-syncer/internal/sync"
-	orgs "github.com/maxgio92/peribolos-syncer/pkg/peribolos"
-	"github.com/maxgio92/peribolos-syncer/pkg/pgp"
+	syncergit "github.com/falcosecurity/peribolos-syncer/internal/git"
+	syncergithub "github.com/falcosecurity/peribolos-syncer/internal/github"
+	"github.com/falcosecurity/peribolos-syncer/internal/output"
+	"github.com/falcosecurity/peribolos-syncer/internal/owners"
+	"github.com/falcosecurity/peribolos-syncer/internal/sync"
+	orgs "github.com/falcosecurity/peribolos-syncer/pkg/peribolos"
+	"github.com/falcosecurity/peribolos-syncer/pkg/pgp"
 )
 
 type options struct {
