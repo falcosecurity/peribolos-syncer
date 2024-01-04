@@ -23,21 +23,21 @@ import (
 	"github.com/falcosecurity/peribolos-syncer/internal/output"
 )
 
-var (
-	// Semantic version that refers to ghe version (git tag) of syncer that is released.
+const (
+	// Semantic Version that refers to ghe Version (git tag) of syncer that is released.
 	// NOTE: The $Format strings are replaced during 'git archive' thanks to the
 	// companion .gitattributes file containing 'export-subst' in this same
 	// directory.  See also https://git-scm.com/docs/gitattributes.
-	semVersion = "v0.0.0-master+$Format:%H$"
+	SemVersion = "v0.0.0-master+$Format:%H$"
 
 	// sha1 from git, output of $(git rev-parse HEAD).
-	gitCommit = "$Format:%H$"
+	GitCommit = "$Format:%H$"
 
 	// build date in ISO8601 format, output of $(date -u +'%Y-%m-%dT%H:%M:%SZ').
-	buildDate = "1970-01-01T00:00:00Z"
+	BuildDate = "1970-01-01T00:00:00Z"
 )
 
-type version struct {
+type Version struct {
 	SemVersion string `json:"sem_version"`
 	GitCommit  string `json:"git_commit"`
 	BuildDate  string `json:"build_date"`
@@ -46,13 +46,13 @@ type version struct {
 	Platform   string `json:"platform"`
 }
 
-// New returns a new version command.
+// New returns a new Version command.
 func New() *cobra.Command {
-	v := newVersion()
+	v := NewVersion()
 
 	cmd := &cobra.Command{
-		Use:   "version",
-		Short: "Return the syncer version",
+		Use:   "Version",
+		Short: "Return the syncer Version",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return v.Print()
 		},
@@ -61,18 +61,19 @@ func New() *cobra.Command {
 	return cmd
 }
 
-func (o *version) Print() error {
+func (o *Version) Print() error {
 	output.Print(o.SemVersion)
+
 	return nil
 }
 
-func newVersion() version {
+func NewVersion() Version {
 	// These variables usually come from -ldflags settings and in their
 	// absence fallback to the ones defined in the var section.
-	return version{
-		SemVersion: semVersion,
-		GitCommit:  gitCommit,
-		BuildDate:  buildDate,
+	return Version{
+		SemVersion: SemVersion,
+		GitCommit:  GitCommit,
+		BuildDate:  BuildDate,
 		GoVersion:  runtime.Version(),
 		Compiler:   runtime.Compiler,
 		Platform:   fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH),

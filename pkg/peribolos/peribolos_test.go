@@ -35,9 +35,7 @@ const (
 )
 
 var _ = Describe("Creating new Peribolos config", func() {
-	var (
-		config *peribolos.FullConfig
-	)
+	var config *peribolos.FullConfig
 
 	BeforeEach(func() {
 		config = NewConfig()
@@ -58,7 +56,6 @@ var _ = Describe("Loading Peribolos config from filesystem", func() {
 	)
 
 	Context("config is a valid peribolos fullconfig", func() {
-
 		BeforeEach(func() {
 			configYaml = fmt.Sprintf(`
 orgs:
@@ -78,37 +75,34 @@ orgs:
 `, org, admin, admin, member, team, admin, admin, member)
 
 			err = yaml.Unmarshal([]byte(configYaml), config)
-			Expect(err).To(BeNil())
+			Expect(err).To(Succeed())
 
-			file, err := fs.Create(filename)
-			Expect(err).To(BeNil())
+			file, _ := fs.Create(filename)
 			Expect(file).ToNot(BeNil())
-			_, err = file.Write([]byte(configYaml))
-			Expect(err).To(BeNil())
+			file.Write([]byte(configYaml))
 
 			config, err = LoadConfigFromFilesystem(fs, filename)
 		})
 
 		It("should not error", func() {
 			Expect(config).ToNot(BeNil())
-			Expect(err).To(BeNil())
+			Expect(err).To(Succeed())
 		})
 
 		It("should build correct teams", func() {
-			Expect(len(config.Orgs[org].Teams)).To(Equal(1))
+			Expect(config.Orgs[org].Teams).To(HaveLen(1))
 		})
 
 		It("should build correct teams maintainers", func() {
-			Expect(len(config.Orgs[org].Teams[team].Maintainers)).To(Equal(1))
+			Expect(config.Orgs[org].Teams[team].Maintainers).To(HaveLen(1))
 		})
 
 		It("should build correct teams members", func() {
-			Expect(len(config.Orgs[org].Teams[team].Members)).To(Equal(2))
+			Expect(config.Orgs[org].Teams[team].Members).To(HaveLen(2))
 		})
 	})
 
 	Context("config file is not valid", func() {
-
 		BeforeEach(func() {
 			configYaml = `wrong`
 
@@ -120,12 +114,9 @@ orgs:
 		})
 
 		It("should error", func() {
-			Expect(err).ToNot(BeNil())
-		})
-		It("should return nil", func() {
+			Expect(err).To(HaveOccurred())
 			Expect(config).To(BeNil())
 		})
-
 	})
 })
 
@@ -151,21 +142,19 @@ var _ = Describe("Updating Team's members", func() {
 	})
 
 	Context("the org exists", func() {
-
 		Context("the team exists", func() {
 			BeforeEach(func() {
 				err = AddTeamMembers(config, org, team, []string{"charlie"})
 			})
 			It("should not error", func() {
-				Expect(err).To(BeNil())
+				Expect(err).To(Succeed())
 			})
 			It("should add the member to the specified team", func() {
-				Expect(len(config.Orgs[org].Teams[team].Members)).To(Equal(3))
+				Expect(config.Orgs[org].Teams[team].Members).To(HaveLen(3))
 			})
 			It("should not remove existing members", func() {
 				Expect(config.Orgs[org].Teams[team].Members).To(Equal([]string{admin, member, "charlie"}))
 			})
-
 		})
 
 		Context("the team does not exist", func() {
@@ -174,30 +163,28 @@ var _ = Describe("Updating Team's members", func() {
 			})
 
 			It("should error", func() {
-				Expect(err).ToNot(BeNil())
+				Expect(err).To(HaveOccurred())
 			})
 
 			It("should not change the config", func() {
-				Expect(len(config.Orgs[org].Teams)).To(Equal(1))
+				Expect(config.Orgs[org].Teams).To(HaveLen(1))
 				Expect(config.Orgs[org].Teams[team].Members).To(Equal([]string{"alice", "bob"}))
 				Expect(config.Orgs[org].Teams[team].Maintainers).To(Equal([]string{"alice"}))
 			})
-
 		})
 	})
 
 	Context("the org does not exist", func() {
-
 		BeforeEach(func() {
 			err = AddTeamMembers(config, "nonexistent", team, []string{"charlie"})
 		})
 
 		It("should error", func() {
-			Expect(err).ToNot(BeNil())
+			Expect(err).To(HaveOccurred())
 		})
 
 		It("should not change the config", func() {
-			Expect(len(config.Orgs[org].Teams)).To(Equal(1))
+			Expect(config.Orgs[org].Teams).To(HaveLen(1))
 			Expect(config.Orgs[org].Teams[team].Members).To(Equal([]string{"alice", "bob"}))
 			Expect(config.Orgs[org].Teams[team].Maintainers).To(Equal([]string{"alice"}))
 		})
@@ -226,21 +213,19 @@ var _ = Describe("Updating Team's maintainers", func() {
 	})
 
 	Context("the org exists", func() {
-
 		Context("the team exists", func() {
 			BeforeEach(func() {
 				err = AddTeamMaintainers(config, org, team, []string{"charlie"})
 			})
 			It("should not error", func() {
-				Expect(err).To(BeNil())
+				Expect(err).To(Succeed())
 			})
 			It("should add the member to the specified team", func() {
-				Expect(len(config.Orgs[org].Teams[team].Maintainers)).To(Equal(2))
+				Expect(config.Orgs[org].Teams[team].Maintainers).To(HaveLen(2))
 			})
 			It("should not remove existing members", func() {
 				Expect(config.Orgs[org].Teams[team].Maintainers).To(Equal([]string{admin, "charlie"}))
 			})
-
 		})
 
 		Context("the team does not exist", func() {
@@ -249,30 +234,28 @@ var _ = Describe("Updating Team's maintainers", func() {
 			})
 
 			It("should error", func() {
-				Expect(err).ToNot(BeNil())
+				Expect(err).To(HaveOccurred())
 			})
 
 			It("should not change the config", func() {
-				Expect(len(config.Orgs[org].Teams)).To(Equal(1))
+				Expect(config.Orgs[org].Teams).To(HaveLen(1))
 				Expect(config.Orgs[org].Teams[team].Members).To(Equal([]string{"alice", "bob"}))
 				Expect(config.Orgs[org].Teams[team].Maintainers).To(Equal([]string{"alice"}))
 			})
-
 		})
 	})
 
 	Context("the org does not exist", func() {
-
 		BeforeEach(func() {
 			err = AddTeamMaintainers(config, "nonexistent", team, []string{"charlie"})
 		})
 
 		It("should error", func() {
-			Expect(err).ToNot(BeNil())
+			Expect(err).To(HaveOccurred())
 		})
 
 		It("should not change the config", func() {
-			Expect(len(config.Orgs[org].Teams)).To(Equal(1))
+			Expect(config.Orgs[org].Teams).To(HaveLen(1))
 			Expect(config.Orgs[org].Teams[team].Members).To(Equal([]string{"alice", "bob"}))
 			Expect(config.Orgs[org].Teams[team].Maintainers).To(Equal([]string{"alice"}))
 		})

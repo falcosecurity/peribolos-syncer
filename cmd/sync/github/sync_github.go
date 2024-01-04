@@ -47,7 +47,7 @@ type options struct {
 	publicGPGKeyPath  string
 
 	github syncergithub.GitHubOptions
-	orgs   *orgs.PeribolosOptions
+	orgs   *orgs.Options
 	owners *owners.OwnersLoadingOptions
 
 	git.ListOptions
@@ -60,7 +60,7 @@ func New() *cobra.Command {
 		author:        gitobject.Signature{},
 		github:        syncergithub.GitHubOptions{},
 		owners:        &owners.OwnersLoadingOptions{},
-		orgs:          &orgs.PeribolosOptions{},
+		orgs:          &orgs.Options{},
 	}
 
 	cmd := &cobra.Command{
@@ -94,19 +94,19 @@ func New() *cobra.Command {
 
 func (o *options) validate() error {
 	if o.GitHubOrg == "" {
-		return fmt.Errorf("github organization name is empty")
+		return errors.New("github organization name is empty")
 	}
 
 	if o.GitHubTeam == "" {
-		return fmt.Errorf("github team name is empty")
+		return errors.New("github team name is empty")
 	}
 
 	if o.author.Name == "" {
-		return fmt.Errorf("git author name is empty")
+		return errors.New("git author name is empty")
 	}
 
 	if o.author.Email == "" {
-		return fmt.Errorf("git author email is empty")
+		return errors.New("git author email is empty")
 	}
 
 	if o.publicGPGKeyPath == "" {
@@ -132,6 +132,7 @@ func (o *options) validate() error {
 	return nil
 }
 
+//nolint:funlen
 func (o *options) Run(_ *cobra.Command, _ []string) error {
 	if err := o.validate(); err != nil {
 		return err
@@ -178,7 +179,7 @@ func (o *options) Run(_ *cobra.Command, _ []string) error {
 	}
 
 	// Synchronize the Github Team config with Approvers.
-	if err := orgs.AddTeamMembers(config, o.GitHubOrg, o.GitHubTeam, people); err != nil {
+	if err = orgs.AddTeamMembers(config, o.GitHubOrg, o.GitHubTeam, people); err != nil {
 		return errors.Wrap(err, "error updating maintainers github team from leaf approvers")
 	}
 
@@ -272,6 +273,7 @@ func (o *options) loadPeopleFromOwners(owners repoowners.RepoOwner) []string {
 	switch {
 	// Limiting the scope of the roles.
 	case o.owners.ConfigPath != "":
+		//nolint:gocritic
 		if o.owners.ApproversOnly {
 			// Approvers of the subpart of the repository.
 			people = maps.Keys(owners.Approvers(o.owners.ConfigPath).Set())
@@ -303,7 +305,7 @@ func (o *options) flushConfig(config *peribolos.FullConfig, configPath string) e
 		return errors.Wrap(err, "error recompiling the peribolos config")
 	}
 
-	if err = os.WriteFile(path.Join(configPath, o.orgs.ConfigPath), b, 0644); err != nil {
+	if err = os.WriteFile(path.Join(configPath, o.orgs.ConfigPath), b, modeConfigFile); err != nil {
 		return errors.Wrap(err, "error writing the recompiled peribolos config")
 	}
 

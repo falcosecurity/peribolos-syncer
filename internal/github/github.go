@@ -22,7 +22,6 @@ import (
 
 	"github.com/go-git/go-git/v5"
 	githttp "github.com/go-git/go-git/v5/plumbing/transport/http"
-
 	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
 	"k8s.io/test-infra/pkg/flagutil"
@@ -76,10 +75,9 @@ func (o *GitHubOptions) GetGitClientFactory() (gitv2.ClientFactory, error) {
 	return factory, nil
 }
 
-func (o *GitHubOptions) ForkRepository(githubClient prowgithub.Client,
-	githubOrg, githubRepo, token string) (*git.Repository, *git.Worktree, string, error) {
-
+func (o *GitHubOptions) ForkRepository(githubClient prowgithub.Client, githubOrg, githubRepo, token string) (*git.Repository, *git.Worktree, string, error) {
 	githubClient.Used()
+
 	path, err := os.MkdirTemp("", "orgs")
 	if err != nil {
 		return nil, nil, "", errors.Wrap(err, "error creating temporary directory for cloning git repository")

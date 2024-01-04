@@ -1,6 +1,8 @@
 linters-settings:
   govet:
     check-shadowing: true
+  cyclop:
+    max-complexity: 15
   maligned:
     suggest-new: true
   goconst:
@@ -10,7 +12,7 @@ linters-settings:
     sections:
       - standard # Captures all standard packages if they do not match another section.
       - default # Contains all imports that could not be matched to another section type.
-      - prefix(github.com/falcosecurity/peribolos-owners-syncer) # Groups all imports with the specified Prefix.
+      - prefix(github.com/falcosecurity/peribolos-syncer) # Groups all imports with the specified Prefix.
   tagliatelle:
     case:
       rules:
@@ -31,14 +33,19 @@ linters:
     - ireturn
     - lll
     - nonamedreturns
-    - wrapcheck
     - varnamelen
+    - depguard
+    - wrapcheck
 
 issues:
   exclude-rules:
   - path: /
     linters:
     - typecheck
+  - path: _test.go
+    linters:
+    - revive
+    - ineffassign
+    - staticcheck
+    - errcheck
 
-run:
-  skip-dirs: []
