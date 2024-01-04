@@ -25,9 +25,16 @@ import (
 	"github.com/pkg/errors"
 )
 
+const (
+	CompressionLevel   = 9
+	SigKeyfiletimeSecs = uint32(86400 * 365)
+)
+
 // NewPGPEntity returns a new openGPG Entity and possibly with the identity name and email,
 // with the key pair of which the paths are specified.
 // It possibly returns an error.
+//
+//nolint:funlen
 func NewPGPEntity(authorName, authorEmail, publicKey, privateKey string) (*openpgp.Entity, error) {
 	// Decode the public GPG key.
 	pubKey, err := DecodePublicKeyFile(publicKey)
@@ -52,7 +59,7 @@ func NewPGPEntity(authorName, authorEmail, publicKey, privateKey string) (*openp
 		DefaultCipher:          packet.CipherAES256,
 		DefaultCompressionAlgo: packet.CompressionZLIB,
 		CompressionConfig: &packet.CompressionConfig{
-			Level: 9,
+			Level: CompressionLevel,
 		},
 		RSABits: int(bits),
 	}
@@ -89,7 +96,7 @@ func NewPGPEntity(authorName, authorEmail, publicKey, privateKey string) (*openp
 		},
 	}
 
-	keyLifetimeSecs := uint32(86400 * 365)
+	sigKeyfiletimeSecs := SigKeyfiletimeSecs
 
 	// Add one additional key as signing and optionally encryption key.
 	entity.Subkeys = make([]openpgp.Subkey, 1)
@@ -106,7 +113,7 @@ func NewPGPEntity(authorName, authorEmail, publicKey, privateKey string) (*openp
 			FlagEncryptStorage:        true,
 			FlagEncryptCommunications: true,
 			IssuerKeyId:               &entity.PrimaryKey.KeyId,
-			KeyLifetimeSecs:           &keyLifetimeSecs,
+			KeyLifetimeSecs:           &sigKeyfiletimeSecs,
 		},
 	}
 

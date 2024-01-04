@@ -86,7 +86,6 @@ func AddTeamMaintainers(config *peribolos.FullConfig, org, team string, maintain
 func AddTeamMembers(config *peribolos.FullConfig, org, team string, members []string) error {
 	orgConfig, ok := config.Orgs[org]
 	if !ok {
-		//nolint:goerr113
 		return errors.New("organization not found in peribolos config")
 	}
 

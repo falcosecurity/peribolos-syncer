@@ -40,7 +40,7 @@ var _ = Describe("Decoding a PGP private key", func() {
 		})
 
 		It("should fail", func() {
-			Expect(err).ToNot(BeNil())
+			Expect(err).To(HaveOccurred())
 		})
 		It("key be nil", func() {
 			Expect(priv).To(BeNil())
@@ -50,11 +50,14 @@ var _ = Describe("Decoding a PGP private key", func() {
 	When("the private key is a valid PGP armored private key", func() {
 		BeforeEach(func() {
 			e, _ := openpgp.NewEntity("", "", "", nil)
+			Expect(e).ToNot(BeNil())
 
 			filesystem := memfs.New()
 			file, _ := filesystem.Create("mykey")
+			Expect(file).ToNot(BeNil())
 
 			armored, _ := armor.Encode(file, openpgp.PrivateKeyType, nil)
+			Expect(armored).ToNot(BeNil())
 			defer armored.Close()
 
 			e.SerializePrivate(armored, nil)
@@ -64,9 +67,9 @@ var _ = Describe("Decoding a PGP private key", func() {
 		})
 
 		It("should not fail", func() {
-			Expect(err).To(BeNil())
+			Expect(err).To(Succeed())
 		})
-		It("should not not be nil", func() {
+		It("should not be nil", func() {
 			Expect(priv).ToNot(BeNil())
 		})
 	})
@@ -84,7 +87,7 @@ var _ = Describe("Decoding a PGP public key", func() {
 		})
 
 		It("should fail", func() {
-			Expect(err).ToNot(BeNil())
+			Expect(err).To(HaveOccurred())
 		})
 		It("key be nil", func() {
 			Expect(pub).To(BeNil())
@@ -101,16 +104,17 @@ var _ = Describe("Decoding a PGP public key", func() {
 			armored, _ := armor.Encode(file, openpgp.PublicKeyType, nil)
 			defer armored.Close()
 
-			e.Serialize(armored)
+			err = e.Serialize(armored)
+			Expect(err).To(Succeed())
 			file.Seek(0, io.SeekStart)
 
 			pub, err = pgp.DecodePublicKey(file)
 		})
 
 		It("should not fail", func() {
-			Expect(err).To(BeNil())
+			Expect(err).To(Succeed())
 		})
-		It("should not not be nil", func() {
+		It("should not be nil", func() {
 			Expect(pub).ToNot(BeNil())
 		})
 	})

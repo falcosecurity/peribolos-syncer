@@ -36,7 +36,6 @@ type Handle string
 //
 //nolint:revive
 type OwnersLoadingOptions struct {
-
 	// RepositoryName represents the git repository name at which load the Owners config.
 	RepositoryName string
 
@@ -74,7 +73,8 @@ func (o *OwnersLoadingOptions) AddPFlags(pfs *pflag.FlagSet) {
 // It wraps around repoowners.NewClient facilitating the client build configuration with default settings.
 // It possibly returns an error.
 func NewClient(githubClient github.Client,
-	gitClientFactory gitv2.ClientFactory) *repoowners.Client {
+	gitClientFactory gitv2.ClientFactory,
+) *repoowners.Client {
 	mdYAMLEnabled := func(org, repo string) bool {
 		return false
 	}

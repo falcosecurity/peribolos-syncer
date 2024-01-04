@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package version
+package version_test
 
 import (
 	"fmt"
@@ -21,10 +21,12 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+
+	cmd "github.com/falcosecurity/peribolos-syncer/cmd/version"
 )
 
 var _ = Describe("Version", func() {
-	version := &version{
+	version := &cmd.Version{
 		SemVersion: "0.0.0",
 		GitCommit:  "ef30d58",
 		BuildDate:  "2024-03-25_17:55:07",
@@ -33,19 +35,19 @@ var _ = Describe("Version", func() {
 		Platform:   "linux/test",
 	}
 
-	Context("testing version Print function", func() {
+	Context("testing Version Print function", func() {
 		It("should not error", func() {
 			Expect(version.Print()).Error().ShouldNot(HaveOccurred())
 		})
 	})
 
-	Context("testing newVersion function", func() {
-		It("should return the expected version struct", func() {
-			v := newVersion()
+	Context("testing NewVersion function", func() {
+		It("should return the expected Version struct", func() {
+			v := cmd.NewVersion()
 			Expect(v.Compiler).Should(Equal(runtime.Compiler))
-			Expect(v.SemVersion).Should(Equal(semVersion))
-			Expect(v.GitCommit).Should(Equal(gitCommit))
-			Expect(v.BuildDate).Should(Equal(buildDate))
+			Expect(v.SemVersion).Should(Equal(cmd.SemVersion))
+			Expect(v.GitCommit).Should(Equal(cmd.GitCommit))
+			Expect(v.BuildDate).Should(Equal(cmd.BuildDate))
 			Expect(v.GoVersion).Should(Equal(runtime.Version()))
 			Expect(v.Platform).Should(Equal(fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH)))
 		})

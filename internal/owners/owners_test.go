@@ -27,12 +27,6 @@ import (
 	. "github.com/falcosecurity/peribolos-syncer/internal/owners"
 )
 
-const (
-	repo       = "peribolos-syncer"
-	ref        = "main"
-	ownersPath = "OWNERS"
-)
-
 var _ = Describe("Creating new client", func() {
 	var (
 		ownersClient     *repoowners.Client
