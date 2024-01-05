@@ -37,12 +37,14 @@ title: %s
 var (
 	filePrepender = func(filename string) string {
 		title := strings.TrimPrefix(strings.TrimSuffix(strings.ReplaceAll(filename, "_", " "), ".md"), fmt.Sprintf("%s/", docsDir))
+
 		return fmt.Sprintf(fileTemplate, title)
 	}
 	linkHandler = func(filename string) string {
 		if filename == cmd.CommandName+".md" {
 			return "_index.md"
 		}
+
 		return filename
 	}
 )

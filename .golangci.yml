@@ -48,4 +48,8 @@ issues:
     - ineffassign
     - staticcheck
     - errcheck
+  - path: docs/docs.go
+    linters:
+    - forbidigo
+
 
