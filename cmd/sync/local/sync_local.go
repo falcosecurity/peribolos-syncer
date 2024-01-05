@@ -23,9 +23,9 @@ import (
 	"k8s.io/test-infra/prow/repoowners"
 	"sigs.k8s.io/yaml"
 
-	"github.com/falcosecutity/peribolos-syncer/internal/output"
-	"github.com/falcosecutity/peribolos-syncer/internal/sync"
-	orgs "github.com/falcosecutity/peribolos-syncer/pkg/peribolos"
+	"github.com/falcosecurity/peribolos-syncer/internal/output"
+	"github.com/falcosecurity/peribolos-syncer/internal/sync"
+	orgs "github.com/falcosecurity/peribolos-syncer/pkg/peribolos"
 )
 
 type options struct {
@@ -71,7 +71,7 @@ func (o *options) validate() error {
 	return nil
 }
 
-func (o *options) Run(cmd *cobra.Command, agrs []string) error {
+func (o *options) Run(_ *cobra.Command, _ []string) error {
 	if err := o.validate(); err != nil {
 		return errors.Wrap(err, "error validating parameters")
 	}
