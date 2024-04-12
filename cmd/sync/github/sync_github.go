@@ -18,6 +18,8 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"strings"
+	"unicode"
 
 	"github.com/go-git/go-git/v5"
 	gitobject "github.com/go-git/go-git/v5/plumbing/object"
@@ -138,14 +140,13 @@ func (o *options) Run(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	// Get the GitHub token from filesystem.
-	token, err := os.ReadFile(o.github.TokenPath)
+	token, err := getTokenFromFile(o.github.TokenPath)
 	if err != nil {
-		return errors.Wrap(err, "error reading token file")
+		return errors.Wrap(err, "error reading token from file")
 	}
 
 	// Build GitHub client.
-	githubClient, err := o.github.GitHubClientWithAccessToken(string(token))
+	githubClient, err := o.github.GitHubClientWithAccessToken(token)
 	if err != nil {
 		return errors.Wrap(err, "error generating github client with specified access token")
 	}
@@ -161,7 +162,7 @@ func (o *options) Run(_ *cobra.Command, _ []string) error {
 
 	// Clone the peribolos config repository.
 	repo, worktree, local, err := o.github.ForkRepository(
-		githubClient, o.GitHubOrg, o.orgs.ConfigRepo, string(token))
+		githubClient, o.GitHubOrg, o.orgs.ConfigRepo, token)
 	if err != nil {
 		return errors.Wrap(err, "error forking the config repository")
 	}
@@ -214,7 +215,7 @@ Signed-off-by: %s <%s>
 		if err := repo.Push(&git.PushOptions{
 			Auth: &githttp.BasicAuth{
 				Username: o.github.Username,
-				Password: string(token),
+				Password: token,
 			},
 		}); err != nil {
 			return errors.Wrap(err, "error pushing config update git branch")
@@ -310,4 +311,24 @@ func (o *options) flushConfig(config *peribolos.FullConfig, configPath string) e
 	}
 
 	return nil
+}
+
+func getTokenFromFile(path string) (string, error) {
+	token, err := os.ReadFile(path)
+	if err != nil {
+		return "", errors.Wrap(err, "error reading token file")
+	}
+
+	return removeNonPrintableChars(string(token)), nil
+}
+
+func removeNonPrintableChars(s string) string {
+	return strings.Map(func(r rune) rune {
+		switch {
+		case unicode.IsPrint(r):
+			return r
+		default:
+			return -1
+		}
+	}, s)
 }
