@@ -51,7 +51,7 @@ signs:
   output: true
 
 kos:
-- base_image: cgr.dev/chainguard/static
+- base_image: cgr.dev/chainguard/git
   repository: ghcr.io/falcosecurity/peribolos-syncer
   bare: true
   tags:
